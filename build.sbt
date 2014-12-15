@@ -2,29 +2,13 @@ import AssemblyKeys._
 
 assemblySettings
 
-test in assembly := {} // Tests for Finnair are not defined yet
+name := "induction"
 
-name := "ti-edicsv-ay"
+organization := "nbu-tiu-sds"
 
-organization := "ti-edicsv-ay"
-
-version := "0.6-backbone-cdh5"
+version := "1.0"
 
 scalaVersion := "2.10.4"
-
-checksums in update := Nil
-
-scalacOptions += "-deprecation"
-
-parallelExecution in Test := false
-
-libraryDependencies <++= (version) {
-    case v if v.contains("cdh4") => Seq("com.nicta"  %% "scoobi" % "0.8.4-cdh4",
-                                        "com.amadeus.ori" % "EdifactOnHadoop" % "2.4-cdh4")
-    case v if v.contains("cdh5") => Seq("com.nicta"  %% "scoobi" % "0.8.4-cdh5" exclude ("org.apache.hadoop", "hadoop-client") exclude ("org.apache.avro", "avro"),
-                                        "org.apache.hadoop" % "hadoop-client" % "2.3.0-cdh5.1.2",
-                                        "com.amadeus.ori" % "EdifactOnHadoop" % "2.4-cdh5")
-}
 
 libraryDependencies += "org.specs2" %% "specs2" % "2.3.9" % "test"
 
@@ -56,7 +40,5 @@ javacOptions in Compile ++= Seq("-source", "1.6",  "-target", "1.6")
 scalacOptions += "-target:jvm-1.6"
 
 publishTo := Some("ORI Maven Repo" at "http://orinet.nce.amadeus.net/artifacts/mavenrepo/")
-
-testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "console", "junitxml")
 
 packageArchetype.java_application
