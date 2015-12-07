@@ -12,10 +12,6 @@ scalaVersion := "2.10.4"
 
 libraryDependencies += "org.specs2" %% "specs2" % "2.3.9" % "test"
 
-libraryDependencies += "com.amadeus.ori" % "EdifactParser" % "2.8"
- 
-libraryDependencies += "ti-models" %% "ti-models" % "0.57"
-
 libraryDependencies += "joda-time" % "joda-time" % "2.2"
 
 resolvers ++= Seq(
@@ -39,6 +35,6 @@ javacOptions in Compile ++= Seq("-source", "1.6",  "-target", "1.6")
 
 scalacOptions += "-target:jvm-1.6"
 
-publishTo := Some("ORI Maven Repo" at "http://orinet.nce.amadeus.net/artifacts/mavenrepo/")
+publishTo := Some("Nice Maven Repo" at "http://orinet.nce.amadeus.net/artifacts/mavenrepo/")
 
 packageArchetype.java_application
