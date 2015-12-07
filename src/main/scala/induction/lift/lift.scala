@@ -9,7 +9,7 @@ object useTicket {
   
 	def main( args: Array[String] ) {	
 		// get input file
-		val defaultFile = "/home/juarele/scala/learning/Induction_step1/LIFT.txt" // default
+		val defaultFile = "LIFT.txt" // default
 		val file = if (args.length == 1) args(0) else defaultFile // if user writes in stdin
 		this.readFile(file)
 	}
