@@ -42,8 +42,7 @@ resolvers ++= Seq(
 	Resolver.sonatypeRepo("public"),
 	Resolver.sonatypeRepo("releases"),
 	Resolver.sonatypeRepo("snapshots"),
-    "cloudera" at "http://repository.cloudera.com/content/repositories/releases",
-    "Local repository"   at "http://orinet.nce.amadeus.net/artifacts/mavenrepo/",
+	"Local repository"   at "http://localhost/artifacts/mavenrepo/",
 	"Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
 	Resolver.mavenLocal)
 
@@ -56,7 +55,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { mergeStrategy => {
   }
 }
 
-publishTo := Some("Nice Maven Repo" at "http://orinet.nce.amadeus.net/artifacts/mavenrepo/")
+publishTo := Some("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/")
 
 testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "console", "junitxml")
 
