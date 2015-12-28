@@ -8,6 +8,6 @@ object Introduction extends App {
     strippedInputString == reversedInputString
   }
 
-  println("Is 'Herculaneum' a palidrome? " + isPalindrome("Herculaneum"))
+  println("Is 'Herculaneum' a palindrome? " + isPalindrome("Herculaneum"))
 }
 
