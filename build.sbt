@@ -23,7 +23,7 @@ lazy val root = (project in file(".")).
 	settings(commonSettings: _*).
 	settings(libSettings: _*).
 	settings(
-		name := "ti-induction-scala"
+		name := "induction-scala"
 	)
 
 checksums in update := Nil

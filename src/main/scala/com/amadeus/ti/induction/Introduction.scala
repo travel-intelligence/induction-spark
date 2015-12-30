@@ -1,4 +1,4 @@
-package TIInductionScala
+package com.amadeus.ti.induction
 
 object Introduction extends App { 
   def isPalindrome(inputString: String) = {

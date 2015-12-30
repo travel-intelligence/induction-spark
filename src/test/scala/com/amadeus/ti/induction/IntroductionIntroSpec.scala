@@ -1,4 +1,4 @@
-import TIInductionScala.Introduction
+import com.amadeus.ti.induction.Introduction
 import org.specs2.mutable._
 
 class IntroductionIntroSpec extends Specification {
