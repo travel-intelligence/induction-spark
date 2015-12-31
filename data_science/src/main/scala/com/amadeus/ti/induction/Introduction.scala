@@ -28,6 +28,18 @@ object Introduction extends App {
     println ("Written the " + vector.size + "-vector into the '" + filename + "' file.")
   }
 
+  def fullCycleVector (meanValue: Double, size: Int) = {
+    val filename = "tmp-normal-distributed-vector.csv"
+    writeVector (generateVector (meanValue, size), filename)
+    val normalVectorRetrieved = readVector (filename)
+    new java.io.File (filename).delete
+    val sizeVector = normalVectorRetrieved.size
+    val normalVectorGenerated = generateVector (meanValue, sizeVector)
+    val normalVectorDiff = normalVectorRetrieved - normalVectorGenerated
+    val meanDiff = vectorStats (normalVectorDiff)
+    meanDiff >= -2000.0/size && meanDiff <= 2000.0/size
+  }
+
   def generateMatrix (meanValue: Double, size: Int) = {
     // Normal distribution with mean value given as parameter.
     val normalDist = breeze.stats.distributions.Gaussian (meanValue, meanValue)
@@ -53,15 +65,17 @@ object Introduction extends App {
     println ("Written the " + matrix.rows + "x" + matrix.cols + "-matrix into the '" + filename + "' file.")
   }
 
-  def fullCycleMatrix (meanValue: Double, size: Int, filename: String) = {
+  def fullCycleMatrix (meanValue: Double, size: Int) = {
+    val filename = "tmp-normal-distributed-matrix.csv"
     writeMatrix (generateMatrix (meanValue, size), filename)
     val normalMatrixRetrieved = readMatrix (filename)
+    new java.io.File (filename).delete
     val rowsMatrix = normalMatrixRetrieved.rows
     val colsMatrix = normalMatrixRetrieved.cols
     val normalMatrixGenerated = generateMatrix (meanValue, rowsMatrix)
     val normalMatrixDiff = normalMatrixRetrieved - normalMatrixGenerated
     val meanDiff = matrixStats (normalMatrixDiff)
-    meanDiff >= -2000/size && meanDiff <= 2000/size
+    meanDiff >= -2000.0/(size*size) && meanDiff <= 2000.0/(size*size)
   }
 
   // Play with vectors
@@ -73,8 +87,8 @@ object Introduction extends App {
   println ("Mean of the generated " + sizeVector + "-sample vector (should be around 5): " + vectorStats (normalVectorGenerated))
   // The difference between two vectors needs an hardware-optimized implementation of BLAS,
   // for instance OpenBLAS ('yum install openblas-devel' should work on RPM-based Linux distributions)
-  // val normalVectorDiff = normalVectorRetrieved - normalVectorGenerated
-  // println ("Mean of the diff " + sizeVector + "-sample vector (should be around 0): " + vectorStats (normalVectorDiff))
+  val normalVectorDiff = normalVectorRetrieved - normalVectorGenerated
+  println ("Mean of the diff " + sizeVector + "-sample vector (should be around 0): " + vectorStats (normalVectorDiff))
 
   // Play with matrices
   // writeMatrix (generateMatrix (5, 100), "data/normal-distributed-matrix.csv")
