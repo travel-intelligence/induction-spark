@@ -61,7 +61,7 @@ object Introduction extends App {
   val normalVectorGenerated = generateVector (5, sizeVector)
   println ("Mean of the generated " + sizeVector + "-sample vector (should be around 5): " + vectorStats (normalVectorGenerated))
   // The difference between two vectors needs an hardware-optimized implementation of BLAS,
-  // for instance OpenBLAS
+  // for instance OpenBLAS ('yum install openblas-devel' should work on RPM-based Linux distributions)
   // val normalVectorDiff = normalVectorRetrieved - normalVectorGenerated
   // println ("Mean of the diff " + sizeVector + "-sample vector (should be around 0): " + vectorStats (normalVectorDiff))
 
@@ -73,9 +73,7 @@ object Introduction extends App {
   println ("Mean of the retrieved " + rowsMatrix + "x" + colsMatrix + "-matrix (should be around 5): " + matrixStats (normalMatrixRetrieved))
   val normalMatrixGenerated = generateMatrix (5, rowsMatrix)
   println ("Mean of the generated " + rowsMatrix + "x" + colsMatrix + "-matrix (should be around 5): " + matrixStats (normalMatrixGenerated))
-  // The difference between two matrices needs an hardware-optimized implementation of BLAS,
-  // for instance OpenBLAS
-  // val normalMatrixDiff = normalMatrixRetrieved - normalMatrixGenerated
-  // println ("Mean of the diff " + rowsMatrix + "x" + colsMatrix + "-matrix (should be around 0): " + matrixStats (normalMatrixDiff))
+  val normalMatrixDiff = normalMatrixRetrieved - normalMatrixGenerated
+  println ("Mean of the diff " + rowsMatrix + "x" + colsMatrix + "-matrix (should be around 0): " + matrixStats (normalMatrixDiff))
 }
 
