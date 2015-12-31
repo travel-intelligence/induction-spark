@@ -53,6 +53,17 @@ object Introduction extends App {
     println ("Written the " + matrix.rows + "x" + matrix.cols + "-matrix into the '" + filename + "' file.")
   }
 
+  def fullCycleMatrix (meanValue: Double, size: Int, filename: String) = {
+    writeMatrix (generateMatrix (meanValue, size), filename)
+    val normalMatrixRetrieved = readMatrix (filename)
+    val rowsMatrix = normalMatrixRetrieved.rows
+    val colsMatrix = normalMatrixRetrieved.cols
+    val normalMatrixGenerated = generateMatrix (meanValue, rowsMatrix)
+    val normalMatrixDiff = normalMatrixRetrieved - normalMatrixGenerated
+    val meanDiff = matrixStats (normalMatrixDiff)
+    meanDiff >= -2000/size && meanDiff <= 2000/size
+  }
+
   // Play with vectors
   // writeVector (generateVector (5, 10000), "data/normal-distributed-vector.csv")
   val normalVectorRetrieved = readVector ("data/normal-distributed-vector.csv")

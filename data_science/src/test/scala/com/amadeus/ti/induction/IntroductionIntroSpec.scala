@@ -26,5 +26,11 @@ class IntroductionIntroSpec extends Specification {
     }
   }
 
+  "The comparison of two generated 100x100-sample Normal-distributed matrices, one being written on and read from disk" should {
+    "have a mean value between -0.2 and +0.2" in {
+      (Introduction.fullCycleMatrix (5.0, 100, "tmp-normal-distributed-matrix.csv")) must beTrue
+    }
+  }
+
 }
 
