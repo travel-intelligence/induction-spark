@@ -18,11 +18,14 @@ object Introduction extends App {
   // Query Spark thanks to the SQL language
   val sqlContext = new org.apache.spark.sql.SQLContext (sparkContext)
   
-  // //////////// First way //////////////
+  // //////////// First way: without case classes //////////////
+  println ("//////////// First way: without case classes //////////////")
+
   // Fill a (org.apache.spark.sql.)DataFrame with the content of the CSV file
   val studentsDF = sqlContext.csvFile (filePath = "StudentData.csv", useHeader = true, delimiter = '|')
   
   // Print the schema of this input
+  println ("studentsDF:")
   studentsDF.printSchema
   
   // Sample 3 records along with headers
@@ -39,12 +42,12 @@ object Introduction extends App {
     
   // Select just the email ID to a different DataFrame
   val emailDataFrame:org.apache.spark.sql.DataFrame = studentsDF.select ("email")
-  
+  println ("emailDataFrame:")
   emailDataFrame.show(3)
   
   // Select more than one column and create a different DataFrame
   val studentEmailDF = studentsDF.select ("studentName", "email")
-  
+  println ("studentEmailDF:")
   studentEmailDF.show(3)
   
   // Print the first 5 records, which have student ID over 5
@@ -63,9 +66,9 @@ object Introduction extends App {
   // Step 1. Register the students DataFrame as a table with name "students" (or any name)
   studentsDF.registerTempTable ("students")
   
-  //Step 2. Query it away
+  // Step 2. Query it away
   val dfFilteredBySQL = sqlContext.sql ("select * from students where studentName != '' order by email desc")
-  
+  println ("dfFilteredBySQL:")
   dfFilteredBySQL.show(7)
   
   // You could also optionally order the DataFrame by column without registering it as a table.
@@ -75,44 +78,45 @@ object Introduction extends App {
   // Order by a list of column names - without using SQL
   studentsDF.sort ("studentName", "id").show(10)
   
-  // Now, let's save the modified dataframe with a new name
+  // Now, let's save the modified DataFrame with a new name
   val options = Map ("header" -> "true", "path" -> "ModifiedStudent.csv")
   
   // Modify DataFrame - pick 'studentName' and 'email' columns, change 'studentName' column name to just 'name' 
   val copyOfStudentsDF = studentsDF.select (studentsDF ("studentName").as("name"), studentsDF ("email"))
-  
+  println ("copyOfStudentsDF:")
   copyOfStudentsDF.show()
 
   // Save this new dataframe with headers and with file name "ModifiedStudent.csv"
-  // copyOfStudents.save("com.databricks.spark.csv", SaveMode.Overwrite, options)
   copyOfStudentsDF.write.format ("com.databricks.spark.csv").mode (org.apache.spark.sql.SaveMode.Overwrite).options(options).save
   
   // Load the saved data and verify the schema and list some records
   // Instead of using the csvFile, you could do a 'load' 
-  //val newStudents = sqlContext.load("com.databricks.spark.csv",options)
   val newStudentsDF = sqlContext.read.format("com.databricks.spark.csv").options(options).load
+  println ("newStudentsDF:")
   newStudentsDF.printSchema()
-  println ("new Students")
   newStudentsDF.show()
 
-  // //////////// Second way //////////////
+  // //////////// Second way: with case classes //////////////
+  println ("//////////// Second way: with case classes //////////////")
+
   // Create a container, aimed at receiving the data to be read from the CSV file
   val listOfEmployees = List (Employee (1,"Arun"), Employee (2, "Jason"), Employee (3, "Abhi"))
   
   // Read the CSV file and fill the corresponding DataFrame
   val empFrame = sqlContext.createDataFrame (listOfEmployees)
   
+  println ("empFrame:")
   empFrame.printSchema
-  
   empFrame.show(3)
   
   // The withColumnRenamed() function allows to control the names of the columns
   val empFrameWithRenamedColumns = sqlContext.createDataFrame (listOfEmployees).withColumnRenamed ("id", "empId")
   
+  println ("empFrameWithRenamedColumns:")
   empFrameWithRenamedColumns.printSchema
 
   // Watch out for the columns with a "." in them. This is an open bug and needs to be fixed as of 1.3.0
-  empFrameWithRenamedColumns.registerTempTable("employeeTable")
+  empFrameWithRenamedColumns.registerTempTable ("employeeTable")
   
   val sortedByNameEmployees = sqlContext.sql ("select * from employeeTable order by name desc")
   
