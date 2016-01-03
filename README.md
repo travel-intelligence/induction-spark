@@ -1,12 +1,12 @@
-### Induction for Spark
+# Induction for Spark
 
 ## Setup
-# On Fedora
+### On Fedora
 dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs
 
 ## Examples
 
-# Go Through a Basic Example
+### Go Through a Basic Example
 ```bash
 $ mkdir -p ~/dev/bi
 $ cd ~/dev/bi
