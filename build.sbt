@@ -38,7 +38,7 @@ lazy val root = (project in file(".")).
 	settings(commonSettings: _*).
 	settings(libSettings: _*).
 	settings(
-		name := "induction-scala-data-science"
+		name := "induction-spark"
 	)
 
 checksums in update := Nil

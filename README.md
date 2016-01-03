@@ -20,7 +20,7 @@ $ sbt compile
 $ sbt run 2>&1 | grep -v "error"
  [...]
 [info] Loading project definition from ~/dev/bi/tiinductionsparkgit/project
-[info] Set current project to induction-scala-data-science (in build file:~/dev/bi/tiinductionsparkgit/)
+[info] Set current project to induction-spark (in build file:~/dev/bi/tiinductionsparkgit/)
 [info] Running com.amadeus.ti.induction.Introduction 
 [info] //////////// First way: without case classes //////////////
 [info] studentsDF:
