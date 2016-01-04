@@ -16,6 +16,7 @@ object Introduction extends App {
   println ("/////////// First way: with a class extending Product /////////////")
 
   // Fill a Spark RDD structure with the content of the CSV file
+  // (available from http://archive.ics.uci.edu/ml/datasets/Student+Performance)
   val rddOfStudents = convertCSVToStudents ("data/student-mat.csv", sparkContext)
 
   // Create a DataFrame from the Spark RDD
