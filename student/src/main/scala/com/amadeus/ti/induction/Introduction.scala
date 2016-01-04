@@ -28,8 +28,10 @@ object Introduction extends App {
   // Fill a Spark RDD with the content of a CSV file
   def convertCSVToStudents (filePath: String, sc: org.apache.spark.SparkContext)
       : org.apache.spark.rdd.RDD[model.Student] = {
+    val rddOfStringStudents: org.apache.spark.rdd.RDD[String] =
+      sc.textFile (filePath)
     val rddOfStudents: org.apache.spark.rdd.RDD[model.Student] =
-      sc.textFile (filePath).flatMap (eachLine => model.Student (eachLine))
+      rddOfStringStudents.flatMap (eachLine => model.Student (eachLine))
     //
     rddOfStudents
   }
