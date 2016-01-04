@@ -2,7 +2,10 @@
 
 ## Setup
 ### On Fedora
-dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs
+#### For the Hadoop clients
+dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs hadoop-hdfs-fuse parquet-format hadoop-maven-plugin
+#### To run a stand-alone Hadoop cluster
+dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
 
 ## Examples
 

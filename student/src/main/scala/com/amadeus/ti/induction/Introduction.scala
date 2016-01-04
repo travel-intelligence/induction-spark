@@ -1,0 +1,38 @@
+package com.amadeus.ti.induction
+
+//
+object Introduction extends App {
+
+  // Configure a local Spark 'cluster' with two cores
+  val sparkConf = new org.apache.spark.SparkConf().setAppName ("DataWith33Atts").setMaster("local[2]")
+
+  // Initialize Spark context with the Spark configuration
+  val sparkContext = new org.apache.spark.SparkContext (sparkConf)
+
+  // Query Spark thanks to the SQL language
+  val sqlContext = new org.apache.spark.sql.SQLContext (sparkContext)
+
+  // Fill a Spark RDD structure with the content of the CSV file
+  val rddOfStudents = convertCSVToStudents ("data/student-mat.csv", sparkContext)
+
+  //
+  import sqlContext.implicits._
+
+  // Create a DataFrame from the Spark RDD
+  val studentDFrame = rddOfStudents.toDF()
+
+  // DEBUG
+  studentDFrame.printSchema()
+  studentDFrame.show()
+
+  // Fill a Spark RDD with the content of a CSV file
+  def convertCSVToStudents (filePath: String, sc: org.apache.spark.SparkContext)
+      : org.apache.spark.rdd.RDD[model.Student] = {
+    val rddOfOptionStudents: org.apache.spark.rdd.RDD[Option[model.Student]] =
+      sc.textFile (filePath).map (eachLine => model.Student (eachLine))
+    //
+    import FlattenUtils.FlattenOps
+    rddOfOptionStudents.flatten
+  }
+
+}
