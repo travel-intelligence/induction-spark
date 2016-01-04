@@ -18,11 +18,8 @@ object Introduction extends App {
   // Fill a Spark RDD structure with the content of the CSV file
   val rddOfStudents = convertCSVToStudents ("data/student-mat.csv", sparkContext)
 
-  //
-  import sqlContext.implicits._
-
   // Create a DataFrame from the Spark RDD
-  val studentDFrame = rddOfStudents.toDF()
+  val studentDFrame = sqlContext.createDataFrame (rddOfStudents)
 
   // DEBUG
   studentDFrame.printSchema()
