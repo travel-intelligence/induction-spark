@@ -12,6 +12,9 @@ object Introduction extends App {
   // Query Spark thanks to the SQL language
   val sqlContext = new org.apache.spark.sql.SQLContext (sparkContext)
 
+  // //////////// First way: with a class extending Product //////////////
+  println ("/////////// First way: with a class extending Product /////////////")
+
   // Fill a Spark RDD structure with the content of the CSV file
   val rddOfStudents = convertCSVToStudents ("data/student-mat.csv", sparkContext)
 
@@ -28,11 +31,10 @@ object Introduction extends App {
   // Fill a Spark RDD with the content of a CSV file
   def convertCSVToStudents (filePath: String, sc: org.apache.spark.SparkContext)
       : org.apache.spark.rdd.RDD[model.Student] = {
-    val rddOfOptionStudents: org.apache.spark.rdd.RDD[Option[model.Student]] =
-      sc.textFile (filePath).map (eachLine => model.Student (eachLine))
+    val rddOfStudents: org.apache.spark.rdd.RDD[model.Student] =
+      sc.textFile (filePath).flatMap (eachLine => model.Student (eachLine))
     //
-    import FlattenUtils.FlattenOps
-    rddOfOptionStudents.flatten
+    rddOfStudents
   }
 
 }
