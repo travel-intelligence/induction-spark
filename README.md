@@ -3,13 +3,95 @@
 ## Setup
 ### On Fedora
 #### For the Hadoop clients
-dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs hadoop-hdfs-fuse parquet-format hadoop-maven-plugin
+```bash
+$ dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs hadoop-hdfs-fuse parquet-format hadoop-maven-plugin
+```
 #### To run a stand-alone Hadoop cluster
-dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
+```bash
+$ dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
+```
+#### Setup HDFS (as root)
+See also http://fedoraproject.org/wiki/User:Denisarnaud/Hadoop
+
+- Install the Hadoop packages
+```bash
+$ dnf install hadoop-common hadoop-hdfs hadoop-mapreduce \
+ hadoop-mapreduce-examples hadoop-yarn maven-* xmvn*
+```
+- Set the JAVA_HOME environment variable within the Hadoop configuration
+file (the default does not seem to work)
+```bash
+$ vi /etc/hadoop/hadoop-env.sh
+```
+For instance, with the OpenJDK on Fedora 23, the line should read something like:
+```bash
+$ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.65-13.b17.fc23.x86_64
+```
+Or with Oracle Java JDK 8, the line would become:
+```bash
+$ export JAVA_HOME=/usr/java/jdk1.8.0_51
+```
+
+- Format the name-node:
+```bash
+$ runuser hdfs -s /bin/bash /bin/bash -c "hdfs namenode -format"
+```
+
+- Start the Hadoop services:
+```bash
+$ systemctl start hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
+```
+
+- Check that the Hadoop services have been started:
+```bash
+$ systemctl status hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
+```
+Note that, as of January 2016, tomcat@httpfs will not start, due to a bug
+on Fedora 23+ (http://bugzilla.redhat.com/show_bug.cgi?id=1295968).
+A work around is described into the bug report. Basically, the configuration
+files of the Tomcat version delivered with Fedora 23 (/etc/tomcat/), should be
+copied in place of the tomcat@https ones (/etc/hadoop/tomcat/).
+
+- Enable the Hadoop services permanently, in case everything went smoothly:
+```bash
+$ systemctl enable hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
+```
+
+
+- Create the default HDFS directories:
+```bash
+$ hdfs-create-dirs
+```
+
+- Create the HDFS home directory for your Unix user:
+```bash
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir /user/<username>"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown build /user/<username>"
+```
+
+- Create a data directory for the data, and give the write access to the Unix user:
+```bash
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction/student"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
+```
 
 ## Examples
 
 ### Go Through a Basic Example
+
+#### Overview
+That example instanciates (Spark) DataFrames through RDD structures.
+Those latter may retrieve data from CSV files.
+Two ways are explored in that example:
+- The RDD retrieves the full content of the CSV file, and then creates
+the DataFrame.
+That way seems more direct and easier, but it implies that the whole data set
+fits in memory. So, it does not scale to big data cases.
+- The RDD retrieves one row at a time, converts it to a RDD thanks to a case
+class (Student), and then adds the RDD to the DataFrame.
+
+
+#### Setup the Project
 ```bash
 $ mkdir -p ~/dev/bi
 $ cd ~/dev/bi
@@ -20,6 +102,10 @@ $ sbt compile
 [info] Loading project definition from ~/dev/bi/tiinductionsparkgit/project
 [info] Set current project to ti-induction-spark (in build file:~/dev/bi/tiinductionsparkgit/)
 [success] Total time: 0 s, completed Dec 28, 2015 8:54:18 PM
+```
+
+#### Run the project
+```bash
 $ sbt run 2>&1 | grep -v "error"
  [...]
 [info] Loading project definition from ~/dev/bi/tiinductionsparkgit/project
@@ -279,3 +365,16 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 9 s, completed Jan 3, 2016 5:25:13 PM
 ```
 
+### Further Creations of DataFrame Structures
+
+#### Setup of the Project
+
+Some parts of the code use data files on HDFS.
+
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit/student
+$ hadoop fs -mkdir -p /data/induction/student/schema
+$ hadoop fs -put data/schema/profiles.json /data/induction/student/schema
+$ hadoop fs -ls /data/induction/student/schema
+-rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/student/schema/profiles.json
+```
