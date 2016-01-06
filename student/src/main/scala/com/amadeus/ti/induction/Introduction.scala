@@ -1,12 +1,13 @@
 package com.amadeus.ti.induction
 
-//import org.apache.spark.sql.types._
-
 //
 object Introduction extends App {
 
   // Configure a local Spark 'cluster' with two cores
-  val sparkConf = new org.apache.spark.SparkConf().setAppName ("DataWith33Atts").setMaster("local[2]")
+  val sparkConf =
+    new org.apache.spark.SparkConf()
+      .setAppName ("DataWith33Atts")
+      .setMaster ("local[2]")
 
   // Initialize Spark context with the Spark configuration
   val sparkContext = new org.apache.spark.SparkContext (sparkConf)
@@ -45,11 +46,12 @@ object Introduction extends App {
   // From the local filesystem
   val schemaFilepath = "data/schema/profiles.json"
   // From HDFS
-  // val schemaFilepath = "hdfs://localhost:9000/data/scalada/profiles.json"
+  // val schemaFilepath = "hdfs://localhost:14000/data/induction/student/schema/profiles.json"
   val dFrame : org.apache.spark.sql.DataFrame =
     sqlContext.read.json (schemaFilepath)
 
   // DEBUG
+  println ("DataFrame made directly from a JSON schema:")
   dFrame.printSchema()
   dFrame.show()
 
@@ -59,6 +61,7 @@ object Introduction extends App {
   val jsonRDD : org.apache.spark.sql.DataFrame = sqlContext.read.json (strRDD)
 
   // DEBUG
+  println ("DataFrame made directly from a RDD, itself made from a JSON schema:")
   jsonRDD.printSchema()
   jsonRDD.show()
 
@@ -94,10 +97,12 @@ object Introduction extends App {
     )
   )
 
+  //
   val jsonRDDWithSchema : org.apache.spark.sql.DataFrame =
     sqlContext.jsonRDD (strRDD, profilesSchema)
 
   // DEBUG
+  println ("DataFrame made from a DataType:")
   jsonRDDWithSchema.printSchema()
   jsonRDDWithSchema.show()
 
@@ -105,24 +110,30 @@ object Introduction extends App {
   jsonRDDWithSchema.registerTempTable ("profilesTable")
 
   // Filter based on timestamp
-  val filterCount = sqlContext.sql ("select * from profilesTable where registered> CAST('2014-08-26 00:00:00' AS TIMESTAMP)").count
+  val filterCount = sqlContext
+    .sql ("select * from profilesTable where registered > CAST('2014-08-26 00:00:00' AS TIMESTAMP)")
+    .count
 
   val fullCount = sqlContext.sql ("select * from profilesTable").count
 
-  println ("All Records Count : " + fullCount) //200
-  println ("Filtered based on timestamp count : " + filterCount) //106
+  // Checks
+  println ("All records count (should be 200): " + fullCount)
+  println ("Filtered based on timestamp count (should be 106): " + filterCount)
 
   // Write schema as JSON to file
-  scala.reflect.io.File ("profileSchema.json").writeAll (profilesSchema.json)
+  val profileSchemaFilepath = "data/schema/profileSchema.json"
+  scala.reflect.io.File (profileSchemaFilepath).writeAll (profilesSchema.json)
 
+  // Retrieve the JSON schema, just as a sanity check
   val loadedSchema =
     org.apache.spark.sql.types.DataType.fromJson (
       scala.io.Source
-        .fromFile ("profileSchema.json")
+        .fromFile (profileSchemaFilepath)
         .mkString
     )
 
   // Print loaded schema
+  println ("Retrieved JSON schema:")
   println (loadedSchema.prettyJson)
 
 }
