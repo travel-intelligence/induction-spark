@@ -9,8 +9,9 @@ test in assembly := {}
 val libjoda = "joda-time" % "joda-time" % "2.2"
 
 // JSON
-val libjson4score = "org.json4s" % "json4s-core_2.10" % "3.2.11"
-val libjson4sjackson = "org.json4s" % "json4s-jackson_2.10" % "3.2.11"
+// Note: version 3.2.11 not compatible with Spark 1.4+
+val libjson4score = "org.json4s" % "json4s-core_2.10" % "3.2.10"
+val libjson4sjackson = "org.json4s" % "json4s-jackson_2.10" % "3.2.10"
 
 // MySQL
 val libmysql = "mysql" % "mysql-connector-java" % "5.1.34"
