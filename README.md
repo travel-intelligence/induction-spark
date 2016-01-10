@@ -13,31 +13,77 @@ $ dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
 #### Setup HDFS (as root)
 See also http://fedoraproject.org/wiki/User:Denisarnaud/Hadoop
 
-- Install the Hadoop packages
+* Install the Hadoop packages
 ```bash
 $ dnf install hadoop-common hadoop-hdfs hadoop-mapreduce \
  hadoop-mapreduce-examples hadoop-yarn maven-* xmvn*
 ```
-- Set the JAVA_HOME environment variable within the Hadoop configuration
+* Set the JAVA_HOME environment variable within the Hadoop configuration
 file (the default does not seem to work)
 ```bash
 $ vi /etc/hadoop/hadoop-env.sh
 ```
 For instance, with the OpenJDK on Fedora 23, the line should read something like:
 ```bash
-$ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.65-13.b17.fc23.x86_64
+$ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.65-15.b17.fc23.x86_64
 ```
 Or with Oracle Java JDK 8, the line would become:
 ```bash
 $ export JAVA_HOME=/usr/java/jdk1.8.0_51
 ```
 
-- Format the name-node:
+* You may want to adjust the amount of memory and the number of cores
+for the YARN cluster, by adding the following lines to /etc/hadoop/yarn-site.xml
+(derived from http://hadoop.apache.org/docs/r2.4.1/hadoop-yarn/hadoop-yarn-common/yarn-default.xml):
+```xml
+ <property>
+   <description>Number of CPU cores that can be allocated for containers.</description>
+   <name>yarn.nodemanager.resource.cpu-vcores</name>
+   <value>2</value>
+ </property>
+ <property>
+   <description>Amount of physical memory, in MB, that can be allocated for containers.</description>
+   <name>yarn.nodemanager.resource.memory-mb</name>
+   <value>2048</value>
+ </property>
+ <property>
+   <description>The maximum allocation for every container request at the RM, in MBs. Memory requests higher than this won't take effect, and will get capped to this value.</description>
+   <name>yarn.scheduler.maximum-allocation-mb</name>
+   <value>2048</value>
+ </property>
+```
+
+* A few parameters need to be adjusted for the examples with YARN and the
+stand-alone Hadoop cluster (distinct from the Spark cluster embedded in
+the JVM launched by sbt)
+  * /etc/hadoop/core-site.xml (add 20000 to the port number):
+```xml
+  <property>
+    <name>fs.default.name</name>
+    <value>hdfs://localhost:28020</value>
+  </property>
+```
+  * /etc/hadoop/mapred-site.xml (add 20000 to the port number):
+```xml
+  <property>
+    <name>mapred.job.tracker</name>
+    <value>localhost:28021</value>
+  </property>
+```
+  * /etc/hadoop/hdfs-site.xml:
+```xml
+  <property>
+     <name>dfs.safemode.min.datanodes</name>
+     <value>1</value>
+  </property>
+```
+
+* Format the name-node:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hdfs namenode -format"
 ```
 
-- Start the Hadoop services:
+* Start the Hadoop services:
 ```bash
 $ systemctl start hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
 ```
@@ -52,24 +98,24 @@ A work around is described into the bug report. Basically, the configuration
 files of the Tomcat version delivered with Fedora 23 (/etc/tomcat/), should be
 copied in place of the tomcat@https ones (/etc/hadoop/tomcat/).
 
-- Enable the Hadoop services permanently, in case everything went smoothly:
+* Enable the Hadoop services permanently, in case everything went smoothly:
 ```bash
 $ systemctl enable hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
 ```
 
 
-- Create the default HDFS directories:
+* Create the default HDFS directories:
 ```bash
 $ hdfs-create-dirs
 ```
 
-- Create the HDFS home directory for your Unix user:
+* Create the HDFS home directory for your Unix user:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir /user/<username>"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown build /user/<username>"
 ```
 
-- Create a data directory for the data, and give the write access to the Unix user:
+* Create a data directory for the data, and give the write access to the Unix user:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction/student"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
@@ -83,11 +129,11 @@ $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
 That example instanciates (Spark) DataFrames through RDD structures.
 Those latter may retrieve data from CSV files.
 Two ways are explored in that example:
-- The RDD retrieves the full content of the CSV file, and then creates
+* The RDD retrieves the full content of the CSV file, and then creates
 the DataFrame.
 That way seems more direct and easier, but it implies that the whole data set
 fits in memory. So, it does not scale to big data cases.
-- The RDD retrieves one row at a time, converts it to a RDD thanks to a case
+* The RDD retrieves one row at a time, converts it to a RDD thanks to a case
 class (Student), and then adds the RDD to the DataFrame.
 
 
@@ -373,8 +419,283 @@ Some parts of the code use data files on HDFS.
 
 ```bash
 $ cd ~/dev/bi/tiinductionsparkgit/student
-$ hadoop fs -mkdir -p /data/induction/student/schema
-$ hadoop fs -put data/schema/profiles.json /data/induction/student/schema
-$ hadoop fs -ls /data/induction/student/schema
--rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/student/schema/profiles.json
+$ hadoop fs -mkdir -p /data/induction/student
+$ hadoop fs -put data/profiles.json /data/induction/student
+$ hadoop fs -ls /data/induction/student
+-rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/student/profiles.json
+```
+#### Run the project
+```bash
+$ sbt run 2>&1 | grep -v "error"
+ [...]
+[info] Loading project definition from ~/dev/bi/tiinductionsparkgit/student/project
+[info] Set current project to induction-spark (in build file:~/dev/bi/tiinductionsparkgit/student/)
+[info] Running com.amadeus.ti.induction.Introduction 
+[info] /////////// First way: with a class extending Product /////////////
+[info] root
+[info]  |-- school: string (nullable = true)
+[info]  |-- sex: string (nullable = true)
+[info]  |-- age: integer (nullable = false)
+[info]  |-- address: string (nullable = true)
+[info]  |-- famsize: string (nullable = true)
+[info]  |-- pstatus: string (nullable = true)
+[info]  |-- medu: integer (nullable = false)
+[info]  |-- fedu: integer (nullable = false)
+[info]  |-- mjob: string (nullable = true)
+[info]  |-- fjob: string (nullable = true)
+[info]  |-- reason: string (nullable = true)
+[info]  |-- guardian: string (nullable = true)
+[info]  |-- traveltime: integer (nullable = false)
+[info]  |-- studytime: integer (nullable = false)
+[info]  |-- failures: integer (nullable = false)
+[info]  |-- schoolsup: string (nullable = true)
+[info]  |-- famsup: string (nullable = true)
+[info]  |-- paid: string (nullable = true)
+[info]  |-- activities: string (nullable = true)
+[info]  |-- nursery: string (nullable = true)
+[info]  |-- higher: string (nullable = true)
+[info]  |-- internet: string (nullable = true)
+[info]  |-- romantic: string (nullable = true)
+[info]  |-- famrel: integer (nullable = false)
+[info]  |-- freetime: integer (nullable = false)
+[info]  |-- goout: integer (nullable = false)
+[info]  |-- dalc: integer (nullable = false)
+[info]  |-- walc: integer (nullable = false)
+[info]  |-- health: integer (nullable = false)
+[info]  |-- absences: integer (nullable = false)
+[info]  |-- g1: integer (nullable = false)
+[info]  |-- g2: integer (nullable = false)
+[info]  |-- g3: integer (nullable = false)
+[info] 
+[info] For input string: "age"
+[info] +------+---+---+-------+-------+-------+----+----+--------+--------+----------+--------+----------+---------+--------+---------+------+----+----------+-------+------+--------+--------+------+--------+-----+----+----+------+--------+--+--+--+
+[info] |school|sex|age|address|famsize|pstatus|medu|fedu|    mjob|    fjob|    reason|guardian|traveltime|studytime|failures|schoolsup|famsup|paid|activities|nursery|higher|internet|romantic|famrel|freetime|goout|dalc|walc|health|absences|g1|g2|g3|
+[info] +------+---+---+-------+-------+-------+----+----+--------+--------+----------+--------+----------+---------+--------+---------+------+----+----------+-------+------+--------+--------+------+--------+-----+----+----+------+--------+--+--+--+
+[info] |    GP|  F| 18|      U|    GT3|      A|   4|   4| at_home| teacher|    course|  mother|         2|        2|       0|      yes|    no|  no|        no|    yes|   yes|      no|      no|     4|       3|    4|   1|   1|     3|       6| 5| 6| 6|
+[info] |    GP|  F| 17|      U|    GT3|      T|   1|   1| at_home|   other|    course|  father|         1|        2|       0|       no|   yes|  no|        no|     no|   yes|     yes|      no|     5|       3|    3|   1|   1|     3|       4| 5| 5| 6|
+[info] |    GP|  F| 15|      U|    LE3|      T|   1|   1| at_home|   other|     other|  mother|         1|        2|       3|      yes|    no| yes|        no|    yes|   yes|     yes|      no|     4|       3|    2|   2|   3|     3|      10| 7| 8|10|
+[info] |    GP|  F| 15|      U|    GT3|      T|   4|   2|  health|services|      home|  mother|         1|        3|       0|       no|   yes| yes|       yes|    yes|   yes|     yes|     yes|     3|       2|    2|   1|   1|     5|       2|15|14|15|
+[info] |    GP|  F| 16|      U|    GT3|      T|   3|   3|   other|   other|      home|  father|         1|        2|       0|       no|   yes| yes|        no|    yes|   yes|      no|      no|     4|       3|    2|   1|   2|     5|       4| 6|10|10|
+[info] |    GP|  M| 16|      U|    LE3|      T|   4|   3|services|   other|reputation|  mother|         1|        2|       0|       no|   yes| yes|       yes|    yes|   yes|     yes|      no|     5|       4|    2|   1|   2|     5|      10|15|15|15|
+[info] |    GP|  M| 16|      U|    LE3|      T|   2|   2|   other|   other|      home|  mother|         1|        2|       0|       no|    no|  no|        no|    yes|   yes|     yes|      no|     4|       4|    4|   1|   1|     3|       0|12|12|11|
+[info] |    GP|  F| 17|      U|    GT3|      A|   4|   4|   other| teacher|      home|  mother|         2|        2|       0|      yes|   yes|  no|        no|    yes|   yes|      no|      no|     4|       1|    4|   1|   1|     1|       6| 6| 5| 6|
+[info] |    GP|  M| 15|      U|    LE3|      A|   3|   2|services|   other|      home|  mother|         1|        2|       0|       no|   yes| yes|        no|    yes|   yes|     yes|      no|     4|       2|    2|   1|   1|     1|       0|16|18|19|
+[info] |    GP|  M| 15|      U|    GT3|      T|   3|   4|   other|   other|      home|  mother|         1|        2|       0|       no|   yes| yes|       yes|    yes|   yes|     yes|      no|     5|       5|    1|   1|   1|     5|       0|14|15|15|
+[info] |    GP|  F| 15|      U|    GT3|      T|   4|   4| teacher|  health|reputation|  mother|         1|        2|       0|       no|   yes| yes|        no|    yes|   yes|     yes|      no|     3|       3|    3|   1|   2|     2|       0|10| 8| 9|
+[info] |    GP|  F| 15|      U|    GT3|      T|   2|   1|services|   other|reputation|  father|         3|        3|       0|       no|   yes|  no|       yes|    yes|   yes|     yes|      no|     5|       2|    2|   1|   1|     4|       4|10|12|12|
+[info] |    GP|  M| 15|      U|    LE3|      T|   4|   4|  health|services|    course|  father|         1|        1|       0|       no|   yes| yes|       yes|    yes|   yes|     yes|      no|     4|       3|    3|   1|   3|     5|       2|14|14|14|
+[info] |    GP|  M| 15|      U|    GT3|      T|   4|   3| teacher|   other|    course|  mother|         2|        2|       0|       no|   yes| yes|        no|    yes|   yes|     yes|      no|     5|       4|    3|   1|   2|     3|       2|10|10|11|
+[info] |    GP|  M| 15|      U|    GT3|      A|   2|   2|   other|   other|      home|   other|         1|        3|       0|       no|   yes|  no|        no|    yes|   yes|     yes|     yes|     4|       5|    2|   1|   1|     3|       0|14|16|16|
+[info] |    GP|  F| 16|      U|    GT3|      T|   4|   4|  health|   other|      home|  mother|         1|        1|       0|       no|   yes|  no|        no|    yes|   yes|     yes|      no|     4|       4|    4|   1|   2|     2|       4|14|14|14|
+[info] |    GP|  F| 16|      U|    GT3|      T|   4|   4|services|services|reputation|  mother|         1|        3|       0|       no|   yes| yes|       yes|    yes|   yes|     yes|      no|     3|       2|    3|   1|   2|     2|       6|13|14|14|
+[info] |    GP|  F| 16|      U|    GT3|      T|   3|   3|   other|   other|reputation|  mother|         3|        2|       0|      yes|   yes|  no|       yes|    yes|   yes|      no|      no|     5|       3|    2|   1|   1|     4|       4| 8|10|10|
+[info] |    GP|  M| 17|      U|    GT3|      T|   3|   2|services|services|    course|  mother|         1|        1|       3|       no|   yes|  no|       yes|    yes|   yes|     yes|      no|     5|       5|    5|   2|   4|     5|      16| 6| 5| 5|
+[info] |    GP|  M| 16|      U|    LE3|      T|   4|   3|  health|   other|      home|  father|         1|        1|       0|       no|    no| yes|       yes|    yes|   yes|     yes|      no|     3|       1|    3|   1|   3|     5|       4| 8|10|10|
+[info] +------+---+---+-------+-------+-------+----+----+--------+--------+----------+--------+----------+---------+--------+---------+------+----+----------+-------+------+--------+--------+------+--------+-----+----+----+------+--------+--+--+--+
+[info] 
+[info] /////////// Second way: from JSON schema /////////////
+[info] DataFrame made directly from a JSON schema:
+[info] root
+[info]  |-- _id: string (nullable = true)
+[info]  |-- about: string (nullable = true)
+[info]  |-- address: string (nullable = true)
+[info]  |-- age: long (nullable = true)
+[info]  |-- company: string (nullable = true)
+[info]  |-- email: string (nullable = true)
+[info]  |-- eyeColor: string (nullable = true)
+[info]  |-- favoriteFruit: string (nullable = true)
+[info]  |-- gender: string (nullable = true)
+[info]  |-- name: string (nullable = true)
+[info]  |-- phone: string (nullable = true)
+[info]  |-- registered: string (nullable = true)
+[info]  |-- tags: array (nullable = true)
+[info]  |    |-- element: string (containsNull = true)
+[info] 
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] |                 _id|               about|             address|age|  company|               email|eyeColor|favoriteFruit|gender|              name|            phone|         registered|                tags|
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] |55578ccb0cc5b350d...|Eu excepteur esse...|694 Oriental Cour...| 30|  ENDIPIN|tracynguyen@endip...|   brown|        apple|female|      Tracy Nguyen|+1 (971) 504-2050|2014-07-14 11:36:28|List(laboris, fug...|
+[info] |55578ccb6975c4e2a...|Proident exercita...|267 Amber Street,...| 23|  WARETEL|leannagarrett@war...|   brown|   strawberry|female|    Leanna Garrett|+1 (827) 480-2869|2014-05-13 17:36:02|List(sunt, offici...|
+[info] |55578ccb33399a615...|Aute proident Lor...|243 Bridgewater S...| 24| IMPERIUM|blairwhite@imperi...|   brown|       banana|  male|       Blair White|+1 (987) 458-2435|2014-03-13 16:47:44|List(officia, non...|
+[info] |55578ccb0f1d5ab09...|Officia cillum nu...|647 Loring Avenue...| 24|  BEADZZA|andrearay@beadzza...|    blue|        apple|female|        Andrea Ray|+1 (992) 473-2206|2014-06-08 11:16:28|List(sint, repreh...|
+[info] |55578ccb591a45d4e...|Sit fugiat mollit...|721 Bijou Avenue,...| 27|  AUSTECH|penningtongilbert...|   green|        apple|  male|Pennington Gilbert|+1 (857) 533-3476|2015-04-14 08:54:56|List(eiusmod, vel...|
+[info] |55578ccb9f0cd20c4...|Minim do eiusmod ...|694 Llama Court, ...| 21|  PYRAMIA|shelleyburns@pyra...|   green|       banana|female|     Shelley Burns|+1 (965) 409-2401|2014-11-28 19:08:22|List(ea, et, veni...|
+[info] |55578ccb8d0accc28...|Qui proident ulla...|498 Perry Terrace...| 40|  EDECINE|nicolefigueroa@ed...|   green|        apple|female|   Nicole Figueroa|+1 (944) 445-3666|2014-08-26 08:59:55|List(ut, enim, en...|
+[info] |55578ccbd682cca21...|Labore exercitati...|243 Stillwell Ave...| 32|SINGAVERA|galealvarado@sing...|    blue|       banana|female|     Gale Alvarado|+1 (984) 410-3690|2014-12-17 12:02:42|List(do, laborum,...|
+[info] |55578ccb0d9025ddd...|Velit cillum Lore...|649 Beard Street,...| 36|FURNITECH|melindaparker@fur...|    blue|   strawberry|female|    Melinda Parker|+1 (860) 401-3246|2014-03-14 17:30:44|List(officia, fug...|
+[info] |55578ccb5be70de0d...|Laborum tempor mi...|972 Marconi Place...| 36|   DIGIAL|byerscarson@digia...|    blue|        apple|  male|      Byers Carson|+1 (807) 591-3568|2014-01-04 07:54:01|List(non, veniam,...|
+[info] |55578ccbc5a1050a5...|Duis fugiat Lorem...|483 Hanson Place,...| 31| ASSURITY|kristiemckinney@a...|   green|       banana|female|  Kristie Mckinney|+1 (905) 511-3302|2014-06-07 05:23:58|List(culpa, fugia...|
+[info] |55578ccb07fa02369...|Consequat fugiat ...|540 Woodpoint Roa...| 40|MICROLUXE|salazarburks@micr...|   brown|   strawberry|  male|     Salazar Burks|+1 (939) 455-3286|2014-10-02 22:33:54|List(ipsum, adipi...|
+[info] |55578ccb809e55bf0...|Lorem culpa Lorem...|442 Ainslie Stree...| 32| VIOCULAR|hopkinspatterson@...|   green|        apple|  male| Hopkins Patterson|+1 (998) 499-2682|2015-04-16 12:18:35|List(dolore, offi...|
+[info] |55578ccb204ff8ee6...|Qui ad cillum mag...|444 Argyle Road, ...| 23|    IMKAN|maysrosario@imkan...|   green|        apple|  male|      Mays Rosario|+1 (869) 589-3296|2014-02-03 13:44:13|List(quis, nulla,...|
+[info] |55578ccb4b062fc61...|Duis ex velit dui...|571 Sunnyside Ave...| 38|   HELIXO|atkinshancock@hel...|    blue|   strawberry|  male|    Atkins Hancock|+1 (949) 582-3230|2014-01-13 09:04:34|List(dolore, nisi...|
+[info] |55578ccba5ff361a9...|Et magna laboris ...|385 Meeker Avenue...| 40|  SLOFAST|edwinarobertson@s...|    blue|   strawberry|female|  Edwina Robertson|+1 (830) 409-2817|2015-01-08 15:02:38|List(excepteur, c...|
+[info] |55578ccb386940ac3...|Labore sit mollit...|936 Cheever Place...| 37| FLEETMIX|elsienoel@fleetmi...|    blue|        apple|female|        Elsie Noel|+1 (880) 439-2520|2015-04-14 15:29:40|List(voluptate, e...|
+[info] |55578ccbfc41ff7fe...|Consequat eiusmod...|406 Lake Place, M...| 36| EVENTAGE|mirandamarsh@even...|   green|        apple|female|     Miranda Marsh|+1 (836) 586-2989|2014-10-31 19:51:46|List(pariatur, du...|
+[info] |55578ccbfa6b6c300...|Duis fugiat conse...|364 Metropolitan ...| 31|  BALOOBA|sharronmcconnell@...|   brown|        apple|female| Sharron Mcconnell|+1 (947) 432-2612|2014-05-30 08:51:01|List(enim, veniam...|
+[info] |55578ccbdd6650d81...|Consequat et magn...|113 Applegate Cou...| 29|    EURON|mcdowellwelch@eur...|    blue|   strawberry|  male|    Mcdowell Welch|+1 (866) 439-3371|2014-10-17 21:30:54|List(ipsum, do, c...|
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] 
+[info] DataFrame made directly from a RDD, itself made from a JSON schema:
+[info] root
+[info]  |-- _id: string (nullable = true)
+[info]  |-- about: string (nullable = true)
+[info]  |-- address: string (nullable = true)
+[info]  |-- age: long (nullable = true)
+[info]  |-- company: string (nullable = true)
+[info]  |-- email: string (nullable = true)
+[info]  |-- eyeColor: string (nullable = true)
+[info]  |-- favoriteFruit: string (nullable = true)
+[info]  |-- gender: string (nullable = true)
+[info]  |-- name: string (nullable = true)
+[info]  |-- phone: string (nullable = true)
+[info]  |-- registered: string (nullable = true)
+[info]  |-- tags: array (nullable = true)
+[info]  |    |-- element: string (containsNull = true)
+[info] 
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] |                 _id|               about|             address|age|  company|               email|eyeColor|favoriteFruit|gender|              name|            phone|         registered|                tags|
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] |55578ccb0cc5b350d...|Eu excepteur esse...|694 Oriental Cour...| 30|  ENDIPIN|tracynguyen@endip...|   brown|        apple|female|      Tracy Nguyen|+1 (971) 504-2050|2014-07-14 11:36:28|List(laboris, fug...|
+[info] |55578ccb6975c4e2a...|Proident exercita...|267 Amber Street,...| 23|  WARETEL|leannagarrett@war...|   brown|   strawberry|female|    Leanna Garrett|+1 (827) 480-2869|2014-05-13 17:36:02|List(sunt, offici...|
+[info] |55578ccb33399a615...|Aute proident Lor...|243 Bridgewater S...| 24| IMPERIUM|blairwhite@imperi...|   brown|       banana|  male|       Blair White|+1 (987) 458-2435|2014-03-13 16:47:44|List(officia, non...|
+[info] |55578ccb0f1d5ab09...|Officia cillum nu...|647 Loring Avenue...| 24|  BEADZZA|andrearay@beadzza...|    blue|        apple|female|        Andrea Ray|+1 (992) 473-2206|2014-06-08 11:16:28|List(sint, repreh...|
+[info] |55578ccb591a45d4e...|Sit fugiat mollit...|721 Bijou Avenue,...| 27|  AUSTECH|penningtongilbert...|   green|        apple|  male|Pennington Gilbert|+1 (857) 533-3476|2015-04-14 08:54:56|List(eiusmod, vel...|
+[info] |55578ccb9f0cd20c4...|Minim do eiusmod ...|694 Llama Court, ...| 21|  PYRAMIA|shelleyburns@pyra...|   green|       banana|female|     Shelley Burns|+1 (965) 409-2401|2014-11-28 19:08:22|List(ea, et, veni...|
+[info] |55578ccb8d0accc28...|Qui proident ulla...|498 Perry Terrace...| 40|  EDECINE|nicolefigueroa@ed...|   green|        apple|female|   Nicole Figueroa|+1 (944) 445-3666|2014-08-26 08:59:55|List(ut, enim, en...|
+[info] |55578ccbd682cca21...|Labore exercitati...|243 Stillwell Ave...| 32|SINGAVERA|galealvarado@sing...|    blue|       banana|female|     Gale Alvarado|+1 (984) 410-3690|2014-12-17 12:02:42|List(do, laborum,...|
+[info] |55578ccb0d9025ddd...|Velit cillum Lore...|649 Beard Street,...| 36|FURNITECH|melindaparker@fur...|    blue|   strawberry|female|    Melinda Parker|+1 (860) 401-3246|2014-03-14 17:30:44|List(officia, fug...|
+[info] |55578ccb5be70de0d...|Laborum tempor mi...|972 Marconi Place...| 36|   DIGIAL|byerscarson@digia...|    blue|        apple|  male|      Byers Carson|+1 (807) 591-3568|2014-01-04 07:54:01|List(non, veniam,...|
+[info] |55578ccbc5a1050a5...|Duis fugiat Lorem...|483 Hanson Place,...| 31| ASSURITY|kristiemckinney@a...|   green|       banana|female|  Kristie Mckinney|+1 (905) 511-3302|2014-06-07 05:23:58|List(culpa, fugia...|
+[info] |55578ccb07fa02369...|Consequat fugiat ...|540 Woodpoint Roa...| 40|MICROLUXE|salazarburks@micr...|   brown|   strawberry|  male|     Salazar Burks|+1 (939) 455-3286|2014-10-02 22:33:54|List(ipsum, adipi...|
+[info] |55578ccb809e55bf0...|Lorem culpa Lorem...|442 Ainslie Stree...| 32| VIOCULAR|hopkinspatterson@...|   green|        apple|  male| Hopkins Patterson|+1 (998) 499-2682|2015-04-16 12:18:35|List(dolore, offi...|
+[info] |55578ccb204ff8ee6...|Qui ad cillum mag...|444 Argyle Road, ...| 23|    IMKAN|maysrosario@imkan...|   green|        apple|  male|      Mays Rosario|+1 (869) 589-3296|2014-02-03 13:44:13|List(quis, nulla,...|
+[info] |55578ccb4b062fc61...|Duis ex velit dui...|571 Sunnyside Ave...| 38|   HELIXO|atkinshancock@hel...|    blue|   strawberry|  male|    Atkins Hancock|+1 (949) 582-3230|2014-01-13 09:04:34|List(dolore, nisi...|
+[info] |55578ccba5ff361a9...|Et magna laboris ...|385 Meeker Avenue...| 40|  SLOFAST|edwinarobertson@s...|    blue|   strawberry|female|  Edwina Robertson|+1 (830) 409-2817|2015-01-08 15:02:38|List(excepteur, c...|
+[info] |55578ccb386940ac3...|Labore sit mollit...|936 Cheever Place...| 37| FLEETMIX|elsienoel@fleetmi...|    blue|        apple|female|        Elsie Noel|+1 (880) 439-2520|2015-04-14 15:29:40|List(voluptate, e...|
+[info] |55578ccbfc41ff7fe...|Consequat eiusmod...|406 Lake Place, M...| 36| EVENTAGE|mirandamarsh@even...|   green|        apple|female|     Miranda Marsh|+1 (836) 586-2989|2014-10-31 19:51:46|List(pariatur, du...|
+[info] |55578ccbfa6b6c300...|Duis fugiat conse...|364 Metropolitan ...| 31|  BALOOBA|sharronmcconnell@...|   brown|        apple|female| Sharron Mcconnell|+1 (947) 432-2612|2014-05-30 08:51:01|List(enim, veniam...|
+[info] |55578ccbdd6650d81...|Consequat et magn...|113 Applegate Cou...| 29|    EURON|mcdowellwelch@eur...|    blue|   strawberry|  male|    Mcdowell Welch|+1 (866) 439-3371|2014-10-17 21:30:54|List(ipsum, do, c...|
+[info] +--------------------+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+-------------------+--------------------+
+[info] 
+[info] DataFrame made from a DataType:
+[info] root
+[info]  |-- id: string (nullable = true)
+[info]  |-- about: string (nullable = true)
+[info]  |-- address: string (nullable = true)
+[info]  |-- age: integer (nullable = true)
+[info]  |-- company: string (nullable = true)
+[info]  |-- email: string (nullable = true)
+[info]  |-- eyeColor: string (nullable = true)
+[info]  |-- favoriteFruit: string (nullable = true)
+[info]  |-- gender: string (nullable = true)
+[info]  |-- name: string (nullable = true)
+[info]  |-- phone: string (nullable = true)
+[info]  |-- registered: timestamp (nullable = true)
+[info]  |-- tags: array (nullable = true)
+[info]  |    |-- element: string (containsNull = true)
+[info] 
+[info] +----+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+--------------------+--------------------+
+[info] |  id|               about|             address|age|  company|               email|eyeColor|favoriteFruit|gender|              name|            phone|          registered|                tags|
+[info] +----+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+--------------------+--------------------+
+[info] |null|Eu excepteur esse...|694 Oriental Cour...| 30|  ENDIPIN|tracynguyen@endip...|   brown|        apple|female|      Tracy Nguyen|+1 (971) 504-2050|2014-07-14 11:36:...|List(laboris, fug...|
+[info] |null|Proident exercita...|267 Amber Street,...| 23|  WARETEL|leannagarrett@war...|   brown|   strawberry|female|    Leanna Garrett|+1 (827) 480-2869|2014-05-13 17:36:...|List(sunt, offici...|
+[info] |null|Aute proident Lor...|243 Bridgewater S...| 24| IMPERIUM|blairwhite@imperi...|   brown|       banana|  male|       Blair White|+1 (987) 458-2435|2014-03-13 16:47:...|List(officia, non...|
+[info] |null|Officia cillum nu...|647 Loring Avenue...| 24|  BEADZZA|andrearay@beadzza...|    blue|        apple|female|        Andrea Ray|+1 (992) 473-2206|2014-06-08 11:16:...|List(sint, repreh...|
+[info] |null|Sit fugiat mollit...|721 Bijou Avenue,...| 27|  AUSTECH|penningtongilbert...|   green|        apple|  male|Pennington Gilbert|+1 (857) 533-3476|2015-04-14 08:54:...|List(eiusmod, vel...|
+[info] |null|Minim do eiusmod ...|694 Llama Court, ...| 21|  PYRAMIA|shelleyburns@pyra...|   green|       banana|female|     Shelley Burns|+1 (965) 409-2401|2014-11-28 19:08:...|List(ea, et, veni...|
+[info] |null|Qui proident ulla...|498 Perry Terrace...| 40|  EDECINE|nicolefigueroa@ed...|   green|        apple|female|   Nicole Figueroa|+1 (944) 445-3666|2014-08-26 08:59:...|List(ut, enim, en...|
+[info] |null|Labore exercitati...|243 Stillwell Ave...| 32|SINGAVERA|galealvarado@sing...|    blue|       banana|female|     Gale Alvarado|+1 (984) 410-3690|2014-12-17 12:02:...|List(do, laborum,...|
+[info] |null|Velit cillum Lore...|649 Beard Street,...| 36|FURNITECH|melindaparker@fur...|    blue|   strawberry|female|    Melinda Parker|+1 (860) 401-3246|2014-03-14 17:30:...|List(officia, fug...|
+[info] |null|Laborum tempor mi...|972 Marconi Place...| 36|   DIGIAL|byerscarson@digia...|    blue|        apple|  male|      Byers Carson|+1 (807) 591-3568|2014-01-04 07:54:...|List(non, veniam,...|
+[info] |null|Duis fugiat Lorem...|483 Hanson Place,...| 31| ASSURITY|kristiemckinney@a...|   green|       banana|female|  Kristie Mckinney|+1 (905) 511-3302|2014-06-07 05:23:...|List(culpa, fugia...|
+[info] |null|Consequat fugiat ...|540 Woodpoint Roa...| 40|MICROLUXE|salazarburks@micr...|   brown|   strawberry|  male|     Salazar Burks|+1 (939) 455-3286|2014-10-02 22:33:...|List(ipsum, adipi...|
+[info] |null|Lorem culpa Lorem...|442 Ainslie Stree...| 32| VIOCULAR|hopkinspatterson@...|   green|        apple|  male| Hopkins Patterson|+1 (998) 499-2682|2015-04-16 12:18:...|List(dolore, offi...|
+[info] |null|Qui ad cillum mag...|444 Argyle Road, ...| 23|    IMKAN|maysrosario@imkan...|   green|        apple|  male|      Mays Rosario|+1 (869) 589-3296|2014-02-03 13:44:...|List(quis, nulla,...|
+[info] |null|Duis ex velit dui...|571 Sunnyside Ave...| 38|   HELIXO|atkinshancock@hel...|    blue|   strawberry|  male|    Atkins Hancock|+1 (949) 582-3230|2014-01-13 09:04:...|List(dolore, nisi...|
+[info] |null|Et magna laboris ...|385 Meeker Avenue...| 40|  SLOFAST|edwinarobertson@s...|    blue|   strawberry|female|  Edwina Robertson|+1 (830) 409-2817|2015-01-08 15:02:...|List(excepteur, c...|
+[info] |null|Labore sit mollit...|936 Cheever Place...| 37| FLEETMIX|elsienoel@fleetmi...|    blue|        apple|female|        Elsie Noel|+1 (880) 439-2520|2015-04-14 15:29:...|List(voluptate, e...|
+[info] |null|Consequat eiusmod...|406 Lake Place, M...| 36| EVENTAGE|mirandamarsh@even...|   green|        apple|female|     Miranda Marsh|+1 (836) 586-2989|2014-10-31 19:51:...|List(pariatur, du...|
+[info] |null|Duis fugiat conse...|364 Metropolitan ...| 31|  BALOOBA|sharronmcconnell@...|   brown|        apple|female| Sharron Mcconnell|+1 (947) 432-2612|2014-05-30 08:51:...|List(enim, veniam...|
+[info] |null|Consequat et magn...|113 Applegate Cou...| 29|    EURON|mcdowellwelch@eur...|    blue|   strawberry|  male|    Mcdowell Welch|+1 (866) 439-3371|2014-10-17 21:30:...|List(ipsum, do, c...|
+[info] +----+--------------------+--------------------+---+---------+--------------------+--------+-------------+------+------------------+-----------------+--------------------+--------------------+
+[info] 
+[info] All records count (should be 200): 200
+[info] Filtered based on timestamp count (should be 106): 106
+[info] Retrieved JSON schema:
+[info] {
+[info]   "type" : "struct",
+[info]   "fields" : [ {
+[info]     "name" : "id",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "about",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "address",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "age",
+[info]     "type" : "integer",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "company",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "email",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "eyeColor",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "favoriteFruit",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "gender",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "name",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "phone",
+[info]     "type" : "string",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "registered",
+[info]     "type" : "timestamp",
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   }, {
+[info]     "name" : "tags",
+[info]     "type" : {
+[info]       "type" : "array",
+[info]       "elementType" : "string",
+[info]       "containsNull" : true
+[info]     },
+[info]     "nullable" : true,
+[info]     "metadata" : { }
+[info]   } ]
+[info] }
+[info] /////////// Third way: with Parquet Storage /////////////
+[success] Total time: 8 s, completed Jan 10, 2016 11:56:40 PM
 ```
