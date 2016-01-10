@@ -44,9 +44,10 @@ object Introduction extends App {
   println ("/////////// Second way: from JSON schema /////////////")
 
   // JSON data file, from the local filesystem
-  val dataFilepath = "data/profiles.json"
+  // val dataFilepath = "data/profiles.json"
   // JSON data file, from HDFS
-  // val dataFilepath = "hdfs://localhost:14000/data/induction/student/profiles.json"
+  // (check the fs.default.name property in the /etc/hadoop/core-site.xml file)
+  val dataFilepath = "hdfs://localhost:8020/data/induction/student/profiles.json"
   val dFrame : org.apache.spark.sql.DataFrame =
     sqlContext.read.json (dataFilepath)
 
@@ -158,19 +159,16 @@ object Introduction extends App {
   val studentDetailsDFrame = sqlContext.createDataFrame (rddOfStudentDetails)
   
   // Save DataFrame as Parquet
+  // Commented as it triggers an error like 'NoSuchFieldError: DECIMAL')
   // studentDetailsDFrame.saveAsParquetFile ("data/studentPq.parquet")
-  studentDetailsDFrame
-    .write
-    .format ("parquet")
-    .mode (org.apache.spark.sql.SaveMode.Overwrite)
-    .save ("data/studentPq.parquet")
+  // studentDetailsDFrame.write.format ("parquet").mode (org.apache.spark.sql.SaveMode.Overwrite).save ("data/studentPq.parquet")
   
   // Read data for confirmation
   // val pqDFrame = sqlContext.parquetFile ("data/studentPq.parquet")
-  val pqDFrame = sqlContext.read.parquet ("data/studentPq.parquet")
+  // val pqDFrame = sqlContext.read.parquet ("data/studentPq.parquet")
 
   // DEBUG
-  pqDFrame.show()
+  // pqDFrame.show()
     
   // The CSV has a header row.  Zipping with index and skipping the first row
   def extractCSVToStudents (filePath: String, sc: org.apache.spark.SparkContext)
