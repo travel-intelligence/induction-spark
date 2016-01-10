@@ -24,22 +24,28 @@ val libspecs2 = "org.specs2" %% "specs2" % "2.4.2" % "test"
 val libbreeze = "org.scalanlp" %% "breeze" % "0.11.2"
 val libbreezenative = "org.scalanlp" %% "breeze-natives" % "0.11.2"
 
+// Apache Avro
+val libavro = "org.apache.avro" % "avro" % "1.7.7"
+val libavroparquet = "com.twitter" % "parquet-avro" % "1.6.0"
+val libavrochill = "com.twitter" %% "chill-avro" % "0.6.0"
+
 // Spark
 val sparkVersion="1.4.1"
 val libsparkcore = "org.apache.spark" %% "spark-core" % sparkVersion
-val libsparksql =  "org.apache.spark" %% "spark-sql" % sparkVersion
-val libsparkmllib =  "org.apache.spark" %% "spark-mllib" % sparkVersion
-val libsparkcsv =  "com.databricks" %% "spark-csv" % "1.0.3"
+val libsparksql = "org.apache.spark" %% "spark-sql" % sparkVersion
+val libsparkmllib = "org.apache.spark" %% "spark-mllib" % sparkVersion
+val libsparkcsv = "com.databricks" %% "spark-csv" % "1.0.3"
+val libsparkhive = "org.apache.spark" %% "spark-hive" % sparkVersion
 val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java" % "1.2.0"
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
 	scalaVersion := "2.10.4",
 	sbtVersion := "0.13.7"
 )
 
-lazy val libSettings = Seq(
+lazy val libSettings = Seq (
   libraryDependencies += libjoda,
   libraryDependencies += libspecs2,
   libraryDependencies += libbreeze,
@@ -48,10 +54,14 @@ lazy val libSettings = Seq(
   libraryDependencies += libsparksql,
   libraryDependencies += libsparkmllib,
   libraryDependencies += libsparkcsv,
+  libraryDependencies += libsparkhive,
   libraryDependencies += libsparkcassandra,
   libraryDependencies += libmysql,
   libraryDependencies += libjson4score,
-  libraryDependencies += libjson4sjackson
+  libraryDependencies += libjson4sjackson,
+  libraryDependencies += libavro,
+  libraryDependencies += libavroparquet,
+  libraryDependencies += libavrochill
 )
 
 lazy val root = (project in file(".")).
@@ -63,7 +73,7 @@ lazy val root = (project in file(".")).
 
 checksums in update := Nil
 
-javacOptions in Compile ++= Seq("-source", "1.6",  "-target", "1.6")
+javacOptions in Compile ++= Seq ("-source", "1.6",  "-target", "1.6")
 
 scalacOptions += "-target:jvm-1.6"
 
@@ -81,6 +91,7 @@ resolvers ++= Seq (
   "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
   "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
   "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+  "Twitter" at "http://maven.twttr.com/",
   Resolver.mavenLocal
 )
 
@@ -97,8 +108,18 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) {
   }
 }
 
+//
 fork := true
 
+
+// Avro (needs the SBT Avro plug-in from "com.cavorite")
+seq (sbtavro.SbtAvro.avroSettings: _*)
+
+(stringType in avroConfig) := "String"
+
+javaSource in sbtavro.SbtAvro.avroConfig <<= (sourceDirectory in Compile)(_ / "java")
+
+// Artifacts
 publishTo := Some ("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/")
 
 testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitxml")
@@ -106,4 +127,3 @@ testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitx
 packageArchetype.java_application
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
-
