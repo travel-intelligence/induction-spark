@@ -704,7 +704,23 @@ $ sbt run 2>&1 | grep -v "error"
 ### Further Creations of DataFrame Structures With Stand-Alone YARN and Spark
 
 #### Setup of the Project
-
+* Download Apache Spark from http://spark.apache.org/downloads.html, and select:
+  * Spark release: 1.6.0
+  * Package type: pre-build with user-provided Hadoop
+  * Download type: Select Apache mirror
+* See also:
+  * http://spark.apache.org/docs/latest/running-on-yarn.html
+```bash
+$ mkdir -p /opt/spark
+$ cd /opt/spark
+$ wget http://d3kbcqa49mib13.cloudfront.net/spark-1.6.0-bin-without-hadoop.tgz
+```
+* Adjust the Classpath of Spark, so as to tap onto the provided Hadoop
+distribution. In the conf/spark-env.sh file:
+```bash
+$ export SPARK_DIST_CLASSPATH=$(/usr/bin/hadoop classpath)
+```
+#####
 
 ```bash
 $ cd ~/dev/bi/tiinductionsparkgit/yarn
