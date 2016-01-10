@@ -115,9 +115,10 @@ $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir /user/<username>"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown build /user/<username>"
 ```
 
-* Create a data directory for the data, and give the write access to the Unix user:
+* Create a data directory for the data, and give the write access
+to the Unix user:
 ```bash
-$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction/student"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
 ```
 
@@ -411,25 +412,25 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 9 s, completed Jan 3, 2016 5:25:13 PM
 ```
 
-### Further Creations of DataFrame Structures
+### Further Creations of DataFrame Structures With Embedded Spark
 
 #### Setup of the Project
 
 Some parts of the code use data files on HDFS.
 
 ```bash
-$ cd ~/dev/bi/tiinductionsparkgit/student
-$ hadoop fs -mkdir -p /data/induction/student
-$ hadoop fs -put data/profiles.json /data/induction/student
-$ hadoop fs -ls /data/induction/student
--rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/student/profiles.json
+$ cd ~/dev/bi/tiinductionsparkgit/embedded
+$ hadoop fs -mkdir -p /data/induction/embedded
+$ hadoop fs -put data/profiles.json /data/induction/embedded
+$ hadoop fs -ls /data/induction/embedded
+-rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/embedded/profiles.json
 ```
 #### Run the project
 ```bash
 $ sbt run 2>&1 | grep -v "error"
  [...]
-[info] Loading project definition from ~/dev/bi/tiinductionsparkgit/student/project
-[info] Set current project to induction-spark (in build file:~/dev/bi/tiinductionsparkgit/student/)
+[info] Loading project definition from ~/dev/bi/tiinductionsparkgit/embedded/project
+[info] Set current project to induction-spark (in build file:~/dev/bi/tiinductionsparkgit/embedded/)
 [info] Running com.amadeus.ti.induction.Introduction 
 [info] /////////// First way: with a class extending Product /////////////
 [info] root
@@ -699,3 +700,15 @@ $ sbt run 2>&1 | grep -v "error"
 [info] /////////// Third way: with Parquet Storage /////////////
 [success] Total time: 8 s, completed Jan 10, 2016 11:56:40 PM
 ```
+
+### Further Creations of DataFrame Structures With Stand-Alone YARN and Spark
+
+#### Setup of the Project
+
+
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit/yarn
+$ hadoop fs -mkdir -p /data/induction/yarn
+$ hadoop fs -put data/profiles.json /data/induction/yarn
+$ hadoop fs -ls /data/induction/yarn
+-rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/yarn/profiles.json
