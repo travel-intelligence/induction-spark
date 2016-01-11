@@ -1,5 +1,8 @@
 import AssemblyKeys._
 
+assemblyOption in assembly :=
+  (assemblyOption in assembly).value.copy (includeScala = false)
+
 assemblySettings
 
 test in assembly := {}
@@ -41,7 +44,7 @@ val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java"
 lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
-	scalaVersion := "2.10.4",
+	scalaVersion := "2.10.5",
 	sbtVersion := "0.13.7"
 )
 
@@ -65,11 +68,11 @@ lazy val libSettings = Seq (
 )
 
 lazy val root = (project in file(".")).
-  settings(commonSettings: _*).
-  settings(libSettings: _*).
-  settings(
-	name := "induction-spark-embedded"
-  )
+	settings(commonSettings: _*).
+	settings(libSettings: _*).
+	settings(
+		name := "induction-spark-yarn"
+	)
 
 checksums in update := Nil
 
@@ -110,7 +113,6 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) {
 
 //
 fork := true
-
 
 // Avro (needs the SBT Avro plug-in from "com.cavorite")
 seq (sbtavro.SbtAvro.avroSettings: _*)

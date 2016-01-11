@@ -92,17 +92,21 @@ $ systemctl start hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-reso
 ```bash
 $ systemctl status hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
 ```
-Note that, as of January 2016, tomcat@httpfs will not start, due to a bug
+Note that, as of January 2016, tomcat@httpfs was not able to start, due to a bug
 on Fedora 23+ (http://bugzilla.redhat.com/show_bug.cgi?id=1295968).
-A work around is described into the bug report. Basically, the configuration
-files of the Tomcat version delivered with Fedora 23 (/etc/tomcat/), should be
-copied in place of the tomcat@https ones (/etc/hadoop/tomcat/).
+A version fixing the bug should reach the Fedora 23 repositories soon.
 
 * Enable the Hadoop services permanently, in case everything went smoothly:
 ```bash
 $ systemctl enable hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-resourcemanager tomcat@httpfs
 ```
 
+* Check that the Hadoop cluster works normally, thanks to Jetty:
+  * Resource Manager (RM): http://localhost:8088
+  * Node Manager: http://localhost:8042
+  * HDFS Mamangement (dfs.http.address value in /etc/hadoop/hdfs-site.xml): http://localhost:50070. In particular:
+    * Browse HDFS: http://localhost:50070/explorer.html
+  * Data Node (dfs.datanode.http.address value in /etc/hadoop/hdfs-site.xml): http://localhost:50075
 
 * Create the default HDFS directories:
 ```bash
@@ -122,9 +126,9 @@ $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
 ```
 
-## Examples
+## Projects
 
-### Go Through a Basic Example
+### Basic Example with the JVM-Embedded Spark
 
 #### Overview
 That example instanciates (Spark) DataFrames through RDD structures.
@@ -701,30 +705,65 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 8 s, completed Jan 10, 2016 11:56:40 PM
 ```
 
-### Further Creations of DataFrame Structures With Stand-Alone YARN and Spark
+### Further Creations of DataFrame Structures With Stand-Alone YARN Cluster
 
 #### Setup of the Project
+* See also:
+  * http://spark.apache.org/docs/latest/running-on-yarn.html
+
 * Download Apache Spark from http://spark.apache.org/downloads.html, and select:
   * Spark release: 1.6.0
   * Package type: pre-build with user-provided Hadoop
   * Download type: Select Apache mirror
-* See also:
-  * http://spark.apache.org/docs/latest/running-on-yarn.html
 ```bash
 $ mkdir -p /opt/spark
 $ cd /opt/spark
 $ wget http://d3kbcqa49mib13.cloudfront.net/spark-1.6.0-bin-without-hadoop.tgz
+$ tar zxf spark-1.6.0-bin-without-hadoop.tgz
 ```
+
 * Adjust the Classpath of Spark, so as to tap onto the provided Hadoop
 distribution. In the conf/spark-env.sh file:
 ```bash
-$ export SPARK_DIST_CLASSPATH=$(/usr/bin/hadoop classpath)
-```
-#####
+$ cd /opt/spark/spark-1.6.0-bin-without-hadoop/conf
+$ cp -a spark-env.sh.template spark-env.sh
+$ cat >> spark-env.sh << _EOF
 
+# To be run through YARN
+# See: http://spark.apache.org/docs/latest/running-on-yarn.html
+export SPARK_DIST_CLASSPATH=$(/usr/bin/hadoop classpath)
+
+_EOF
+```
+
+* Copy the data file to HDFS
 ```bash
 $ cd ~/dev/bi/tiinductionsparkgit/yarn
 $ hadoop fs -mkdir -p /data/induction/yarn
 $ hadoop fs -put data/profiles.json /data/induction/yarn
 $ hadoop fs -ls /data/induction/yarn
 -rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/yarn/profiles.json
+
+* Create a JAR artifact from the project code
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit/yarn
+$ sbt clean assembly
+[info] SHA-1: f0e2911bb88c8d3e94d90f0a4ca596f7864ed59d
+[info] Packaging ~/dev/bi/tiinductionsparkgit/yarn/target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar ...
+[info] Done packaging.
+[success] Total time: 131 s, completed Jan 11, 2016 3:43:49 PM
+```
+
+* Checking the dependency tree for the artifact
+```bash
+$ sbt dependency-tree > deptree.txt
+$ sbt dependency-dot
+$ dot -Tpng target/dependencies-compile.dot > deptree/deptree.png # dot comes with the graphviz package
+$ eog deptree/deptree.png & # eog is the command-line for the Gnome Image Viewer
+```
+
+##### Run the Project
+
+```bash
+$ 
+```
