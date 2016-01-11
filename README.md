@@ -15,6 +15,7 @@ See also http://fedoraproject.org/wiki/User:Denisarnaud/Hadoop
 
 * Install the Hadoop packages
 ```bash
+$ su -
 $ dnf install hadoop-common hadoop-hdfs hadoop-mapreduce \
  hadoop-mapreduce-examples hadoop-yarn maven-* xmvn*
 ```
@@ -124,6 +125,13 @@ to the Unix user:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction"
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
+```
+
+* Create a directory for the JAR artifacts, and give the write access
+to the Unix user:
+```bash
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /applications/induction"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /applications/induction"
 ```
 
 ## Projects
@@ -711,11 +719,13 @@ $ sbt run 2>&1 | grep -v "error"
 * See also:
   * http://spark.apache.org/docs/latest/running-on-yarn.html
 
-* Download Apache Spark from http://spark.apache.org/downloads.html, and select:
+* Download Apache Spark. From http://spark.apache.org/downloads.html, select:
   * Spark release: 1.6.0
   * Package type: pre-build with user-provided Hadoop
   * Download type: Select Apache mirror
+  * As root, expand the tar-ball, for instance in /opt/spark
 ```bash
+$ su -
 $ mkdir -p /opt/spark
 $ cd /opt/spark
 $ wget http://d3kbcqa49mib13.cloudfront.net/spark-1.6.0-bin-without-hadoop.tgz
@@ -723,8 +733,9 @@ $ tar zxf spark-1.6.0-bin-without-hadoop.tgz
 ```
 
 * Adjust the Classpath of Spark, so as to tap onto the provided Hadoop
-distribution. In the conf/spark-env.sh file:
+distribution. In the conf/spark-env.sh file, as root:
 ```bash
+$ su -
 $ cd /opt/spark/spark-1.6.0-bin-without-hadoop/conf
 $ cp -a spark-env.sh.template spark-env.sh
 $ cat >> spark-env.sh << _EOF
@@ -732,6 +743,7 @@ $ cat >> spark-env.sh << _EOF
 # To be run through YARN
 # See: http://spark.apache.org/docs/latest/running-on-yarn.html
 export SPARK_DIST_CLASSPATH=$(/usr/bin/hadoop classpath)
+export HADOOP_CONF_DIR=/etc/hadoop
 
 _EOF
 ```
@@ -739,14 +751,14 @@ _EOF
 * Copy the data file to HDFS
 ```bash
 $ cd ~/dev/bi/tiinductionsparkgit/yarn
-$ hadoop fs -mkdir -p /data/induction/yarn
-$ hadoop fs -put data/profiles.json /data/induction/yarn
-$ hadoop fs -ls /data/induction/yarn
--rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/yarn/profiles.json
+$ hadoop fs -mkdir -p /data/induction/yarn/data
+$ hadoop fs -put data/StudentData.csv /data/induction/yarn/data
+$ hadoop fs -ls /data/induction/yarn/data
+-rw-r--r--   1 build supergroup 5393 2016-01-11 21:57 /data/induction/yarn/data/StudentData.csv
+```
 
 * Create a JAR artifact from the project code
 ```bash
-$ cd ~/dev/bi/tiinductionsparkgit/yarn
 $ sbt clean assembly
 [info] SHA-1: f0e2911bb88c8d3e94d90f0a4ca596f7864ed59d
 [info] Packaging ~/dev/bi/tiinductionsparkgit/yarn/target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar ...
@@ -754,7 +766,8 @@ $ sbt clean assembly
 [success] Total time: 131 s, completed Jan 11, 2016 3:43:49 PM
 ```
 
-* Checking the dependency tree for the artifact
+* Checking the dependency tree for the artifact. If there are duplicates,
+they should be excluded from the dependencies.
 ```bash
 $ sbt dependency-tree > deptree.txt
 $ sbt dependency-dot
@@ -762,8 +775,51 @@ $ dot -Tpng target/dependencies-compile.dot > deptree/deptree.png # dot comes wi
 $ eog deptree/deptree.png & # eog is the command-line for the Gnome Image Viewer
 ```
 
-##### Run the Project
-
+* Copy the JAR artifact to HDFS
 ```bash
-$ 
+$ hadoop fs -mkdir -p /applications/induction/yarn
+$ hadoop fs -put target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar /applications/induction/yarn
+$ hadoop fs -ls /applications/induction/yarn
+-rw-r--r--   1 build supergroup 182256661 2016-01-11 22:22 /applications/induction/yarn/induction-spark-yarn-assembly-0.1.0.jar
+```
+
+* As root, alter the Spark setup, so as to tell where the executor is.
+And check that the setup is correct by running Spark as yarn-client:
+```bash
+$ su -
+$ cat >> /opt/spark/spark-1.6.0-bin-without-hadoop/conf/spark-env.sh << _EOF
+
+# See the yarn project of http://github.com/travel-intelligence/induction-spark
+SPARK_EXECUTOR_URI=hdfs://localhost:28020/applications/induction/yarn/induction-spark-yarn-assembly-0.1.0.jar
+
+_EOF
+```
+
+* Check that the Spark setup works. As the standard Unix developer, launch
+the Spark Shell. A scala> prompt should appear.
+```bash
+$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-shell --master yarn-client
+```
+
+##### Run the Project in yarn-client mode
+The driver program stays on the client JVM side.
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit/yarn
+$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
+ --class com.amadeus.ti.induction.Introduction \
+ --master yarn-client \
+ --executor-memory 1G \
+ target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
+```
+
+##### Run the Project in yarn-client mode
+The driver program runs on the Application master. The logs may be seen on
+the Web UI, with a URL like http://localhost:8088/cluster/app/application_NNNNNNNN_NNNN
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit/yarn
+$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
+ --class com.amadeus.ti.induction.Introduction \
+ --master yarn-cluster \
+ --executor-memory 1G \
+ target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
 ```
