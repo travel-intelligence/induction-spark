@@ -828,3 +828,19 @@ $ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
  target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
 ```
 
+###### Administer the YARN cluster
+* List all the applications. Either on the Web UI (http://localhost:8088/cluster),
+or through the command line:
+```bash
+$ yarn application -list
+```
+* Browse the logs of an application. Either on the Web UI (http://localhost:8088/cluster/app/application_NNNNNNNNNNN_NNNN),
+or through the command line:
+```bash
+$ yarn logs -applicationId application_NNNNNNNNNNNN_NNNN
+```
+* Kill an application
+```bash
+$ yarn application -kill application_NNNNNNNNNNNN_NNNN
+```
+
