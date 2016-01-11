@@ -798,7 +798,7 @@ _EOF
 * Check that the Spark setup works. As the standard Unix developer, launch
 the Spark Shell. A scala> prompt should appear.
 ```bash
-$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-shell --master yarn-client
+$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-shell --master yarn --deploy-mode client
 ```
 
 ##### Run the Project in yarn-client mode
@@ -807,8 +807,10 @@ The driver program stays on the client JVM side.
 $ cd ~/dev/bi/tiinductionsparkgit/yarn
 $ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
  --class com.amadeus.ti.induction.Introduction \
- --master yarn-client \
- --executor-memory 1G \
+ --master yarn --deploy-mode client \
+ --driver-memory 1g \
+ --executor-memory 1g \
+ --executor-cores 2 \
  target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
 ```
 
@@ -819,7 +821,10 @@ the Web UI, with a URL like http://localhost:8088/cluster/app/application_NNNNNN
 $ cd ~/dev/bi/tiinductionsparkgit/yarn
 $ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
  --class com.amadeus.ti.induction.Introduction \
- --master yarn-cluster \
- --executor-memory 1G \
+ --master yarn --deploy-mode cluster \
+ --driver-memory 1g \
+ --executor-memory 1g \
+ --executor-cores 2 \
  target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
 ```
+
