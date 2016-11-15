@@ -19,8 +19,8 @@ val libsparkcsv =  "com.databricks" %% "spark-csv" % "1.0.3"
 lazy val commonSettings = Seq(
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
-	scalaVersion := "2.10.5",
-	sbtVersion := "0.13.7"
+	scalaVersion := "2.10.6",
+	sbtVersion := "0.13.13"
 )
 
 lazy val libSettings = Seq(
