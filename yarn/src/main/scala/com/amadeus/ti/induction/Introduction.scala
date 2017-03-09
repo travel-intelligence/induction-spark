@@ -12,7 +12,8 @@ object Introduction extends App {
   // Configure a local Spark 'cluster' with two cores
   val sparkConf = new org.apache.spark.SparkConf()
     .setAppName ("Spark-Induction")
-  
+    .setMaster ("local[2]")
+
   // Initialize Spark context with the Spark configuration
   val sparkContext = new org.apache.spark.SparkContext (sparkConf)
   
@@ -25,8 +26,8 @@ object Introduction extends App {
   // CSV data file, from the local file-system
   // val dataFilepath = "data/StudentData.csv"
   // CSV data file, from HDFS
-  // (check the fs.default.name property in the /etc/hadoop/core-site.xml file)
-  val dataFilepath= "hdfs://localhost:28020/data/induction/yarn/data/StudentData.csv"
+  // (check the fs.defaultFS property in the /etc/hadoop/core-site.xml file)
+  val dataFilepath= "hdfs://172.30.1.129:8020/user/darnaud/data/induction/yarn/data/StudentData.csv"
 
   val studentsDF = sqlContext.csvFile (filePath = dataFilepath,
     useHeader = true, delimiter = '|')
@@ -134,3 +135,4 @@ object Introduction extends App {
   empFrame1.printSchema
   empFrame1.show()
 }
+
