@@ -100,6 +100,18 @@ resolvers ++= Seq (
   Resolver.mavenLocal
 )
 
+// Merge strategy
+assemblyMergeStrategy in assembly := {
+    case "application.conf"                            =>
+  MergeStrategy.concat
+    case PathList("org", "cyberneko", "html", xs @ _*) =>
+  MergeStrategy.first
+    case m if m.toLowerCase.endsWith("manifest.mf")    =>
+  MergeStrategy.discard
+    case f                                             =>
+  (assemblyMergeStrategy in assembly).value(f)
+}
+
 //
 fork := true
 
