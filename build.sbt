@@ -1,8 +1,9 @@
-import AssemblyKeys._
 
-assemblySettings
+// import AssemblyKeys._
 
-test in assembly := {}
+// assemblySettings
+
+// test in assembly := {}
 
 val libjoda = "joda-time" % "joda-time" % "2.2"
 val libspecs2 = "org.specs2" %% "specs2" % "2.4.2" % "test"

@@ -8,14 +8,16 @@
 
 // test in assembly := {}
 
+// See https://mvnrepository.com
+
 // //// Java libraries
 // Date-Time
 val libjoda = "joda-time" % "joda-time" % "2.9.7"
 
 // JSON
 // Note: version 3.2.11 not compatible with Spark 1.4+
-//val libjson4score = "org.json4s" %% "json4s-core" % "3.5.0"
-val libjson4sjackson = "org.json4s" %% "json4s-jackson" % "3.5.0"
+//val libjson4score = "org.json4s" %% "json4s-core" % "3.2.10"
+val libjson4sjackson = "org.json4s" %% "json4s-jackson" % "3.2.10"
 
 // MySQL
 val libmysql = "mysql" % "mysql-connector-java" % "6.0.5"
