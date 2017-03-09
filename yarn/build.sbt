@@ -1,8 +1,8 @@
 
 // import AssemblyKeys._
 
-// assemblyOption in assembly :=
-//  (assemblyOption in assembly).value.copy (includeScala = false)
+assemblyOption in assembly :=
+  (assemblyOption in assembly).value.copy (includeScala = false)
 
 // assemblySettings
 
@@ -116,7 +116,5 @@ publishTo := Some ("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/"
 testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitxml")
 
 packageArchetype.java_application
-
-net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 
