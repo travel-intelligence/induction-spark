@@ -1,50 +1,51 @@
-import AssemblyKeys._
 
-assemblyOption in assembly :=
-  (assemblyOption in assembly).value.copy (includeScala = false)
+// import AssemblyKeys._
 
-assemblySettings
+// assemblyOption in assembly :=
+//  (assemblyOption in assembly).value.copy (includeScala = false)
 
-test in assembly := {}
+// assemblySettings
+
+// test in assembly := {}
 
 // //// Java libraries
 // Date-Time
-val libjoda = "joda-time" % "joda-time" % "2.2"
+val libjoda = "joda-time" % "joda-time" % "2.9.7"
 
 // JSON
 // Note: version 3.2.11 not compatible with Spark 1.4+
-val libjson4score = "org.json4s" % "json4s-core_2.10" % "3.2.10"
-val libjson4sjackson = "org.json4s" % "json4s-jackson_2.10" % "3.2.10"
+//val libjson4score = "org.json4s" %% "json4s-core" % "3.5.0"
+val libjson4sjackson = "org.json4s" %% "json4s-jackson" % "3.5.0"
 
 // MySQL
-val libmysql = "mysql" % "mysql-connector-java" % "5.1.34"
+val libmysql = "mysql" % "mysql-connector-java" % "6.0.5"
 
 // //// Scala libraries
 // Test
-val libspecs2 = "org.specs2" %% "specs2" % "2.4.2" % "test"
+val libspecs2 = "org.specs2" %% "specs2" % "3.3.1" % "test"
 
 // Breeze (linear algebra and numerical algorithms)
-val libbreeze = "org.scalanlp" %% "breeze" % "0.11.2"
-val libbreezenative = "org.scalanlp" %% "breeze-natives" % "0.11.2"
+val libbreeze = "org.scalanlp" %% "breeze" % "0.13"
+val libbreezenative = "org.scalanlp" %% "breeze-natives" % "0.13"
 
 // Apache Avro
-val libavro = "org.apache.avro" % "avro" % "1.7.7"
+val libavro = "org.apache.avro" % "avro" % "1.8.1"
 val libavroparquet = "com.twitter" % "parquet-avro" % "1.6.0"
-val libavrochill = "com.twitter" %% "chill-avro" % "0.6.0"
+val libavrochill = "com.twitter" %% "chill-avro" % "0.9.2"
 
 // Spark
-val sparkVersion="1.4.1"
+val sparkVersion="1.6.3"
 val libsparkcore = "org.apache.spark" %% "spark-core" % sparkVersion
 val libsparksql = "org.apache.spark" %% "spark-sql" % sparkVersion
 val libsparkmllib = "org.apache.spark" %% "spark-mllib" % sparkVersion
-val libsparkcsv = "com.databricks" %% "spark-csv" % "1.0.3"
+val libsparkcsv = "com.databricks" %% "spark-csv" % "1.5.0"
 val libsparkhive = "org.apache.spark" %% "spark-hive" % sparkVersion
-val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java" % "1.2.0"
+val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java" % "1.6.0-M1"
 
 lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
-	scalaVersion := "2.10.5",
+	scalaVersion := "2.10.6",
 	sbtVersion := "0.13.13"
 )
 
@@ -60,7 +61,6 @@ lazy val libSettings = Seq (
   libraryDependencies += libsparkhive,
   libraryDependencies += libsparkcassandra,
   libraryDependencies += libmysql,
-  libraryDependencies += libjson4score,
   libraryDependencies += libjson4sjackson,
   libraryDependencies += libavro,
   libraryDependencies += libavroparquet,
@@ -76,9 +76,9 @@ lazy val root = (project in file(".")).
 
 checksums in update := Nil
 
-javacOptions in Compile ++= Seq ("-source", "1.6",  "-target", "1.6")
+javacOptions in Compile ++= Seq ("-source", "1.7",  "-target", "1.7")
 
-scalacOptions += "-target:jvm-1.6"
+scalacOptions += "-target:jvm-1.7"
 
 scalacOptions += "-deprecation"
 
@@ -116,3 +116,5 @@ testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitx
 packageArchetype.java_application
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
+
+
