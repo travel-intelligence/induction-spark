@@ -102,7 +102,7 @@ resolvers ++= Seq (
 fork := true
 
 // Avro (needs the SBT Avro plug-in from "com.cavorite")
-seq (sbtavro.SbtAvro.avroSettings: _*)
+Seq (sbtavro.SbtAvro.avroSettings: _*)
 
 (stringType in avroConfig) := "String"
 
