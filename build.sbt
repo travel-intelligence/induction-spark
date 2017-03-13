@@ -64,15 +64,6 @@ resolvers ++= Seq(
   "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
 	Resolver.mavenLocal)
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { mergeStrategy => {
-    case entry => {
-      val strategy = mergeStrategy(entry)
-      if (strategy == MergeStrategy.deduplicate) MergeStrategy.first
-      else strategy
-    }
-  }
-}
-
 fork := true
 
 publishTo := Some("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/")
@@ -80,6 +71,4 @@ publishTo := Some("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/")
 testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "console", "junitxml")
 
 packageArchetype.java_application
-
-net.virtualvoid.sbt.graph.Plugin.graphSettings
 
