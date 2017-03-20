@@ -9,11 +9,11 @@ image: library/centos:7
 
 before_script:
   # Update the system
-  - yum -y update
+  - sudo yum -y update
   # Install SBT
   - curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
-  - rpm --import "http://dl.bintray.com/sbt/rpm/repodata/:repomd.xml.key"
-  - yum -y install sbt
+  - sudo rpm --import "http://dl.bintray.com/sbt/rpm/repodata/:repomd.xml.key"
+  - sudo yum -y install sbt
   # Log the sbt version
   - sbt sbt-version
 
