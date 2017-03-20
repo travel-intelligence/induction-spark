@@ -114,24 +114,49 @@ $ systemctl enable hadoop-namenode hadoop-datanode hadoop-nodemanager hadoop-res
 $ hdfs-create-dirs
 ```
 
+* Add ```hdfs``` as a group to your Unix user:
+```bash
+$ usermod <username> -a -G hdfs
+```
+
 * Create the HDFS home directory for your Unix user:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir /user/<username>"
-$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown build /user/<username>"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown <username> /user/<username>"
 ```
 
 * Create a data directory for the data, and give the write access
 to the Unix user:
 ```bash
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /data/induction"
-$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /data"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R <username> /data"
 ```
 
 * Create a directory for the JAR artifacts, and give the write access
 to the Unix user:
 ```bash
-$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /applications/induction"
-$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R build /applications/induction"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /artefacts/common"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /artefacts/users/<username>"
+$ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R <username> /artefacts/users/<username>"
+```
+
+### Interacting with the HDFS file-system
+As you may choose to use an external cluster, rather than setting up your own,
+in the remainder of that introduction, an alias and some environment variable
+will be used. A few examples are given; so, just pick one.
+* Use your own set up HDFS:
+```bash
+$ echo "# HDFS cluster" >> ~/.bashrc
+$ echo "alias hdfsfs='hdfs dfs'" >> ~/.bashrc
+$ echo "export HDFS_URL=hdfs://localhost:28020" >> ~/.bashrc
+$ . ~/.bashrc
+```
+* Use an external cluster HDFS:
+```bash
+$ echo "# HDFS cluster" >> ~/.bashrc
+$ echo "alias hdfsfs='hdfs dfs -Dfs.defaultFS=hdfs://172.30.1.129:8020'" >> ~/.bashrc
+$ echo "export HDFS_URL=hdfs://172.30.1.129:8020" >> ~/.bashrc
+$ . ~/.bashrc
 ```
 
 ## Projects
@@ -730,13 +755,16 @@ $ mkdir -p /opt/spark
 $ cd /opt/spark
 $ wget http://d3kbcqa49mib13.cloudfront.net/spark-1.6.0-bin-without-hadoop.tgz
 $ tar zxf spark-1.6.0-bin-without-hadoop.tgz
+$ echo "# Spark" >> ~/.bashrc
+$ echo "export SPARK_HOME=/opt/spark/spark-1.6.0-bin-without-hadoop" >> ~/.bashrc
+$ . ~/.bashrc
 ```
 
 * Adjust the Classpath of Spark, so as to tap onto the provided Hadoop
 distribution. In the conf/spark-env.sh file, as root:
 ```bash
 $ su -
-$ cd /opt/spark/spark-1.6.0-bin-without-hadoop/conf
+$ cd $SPARK_HOME/conf
 $ cp -a spark-env.sh.template spark-env.sh
 $ cat >> spark-env.sh << _EOF
 
@@ -750,18 +778,18 @@ _EOF
 
 * Copy the data file to HDFS
 ```bash
-$ cd ~/dev/bi/tiinductionsparkgit/yarn
+$ cd ~/dev/bi/tiinductionsparkgit
 $ hadoop fs -mkdir -p /data/induction/yarn/data
 $ hadoop fs -put data/StudentData.csv /data/induction/yarn/data
 $ hadoop fs -ls /data/induction/yarn/data
 -rw-r--r--   1 build supergroup 5393 2016-01-11 21:57 /data/induction/yarn/data/StudentData.csv
 ```
 
-* Create a JAR artifact from the project code
+* Create an Uber JAR artifact from the project code
 ```bash
 $ sbt clean assembly
 [info] SHA-1: f0e2911bb88c8d3e94d90f0a4ca596f7864ed59d
-[info] Packaging ~/dev/bi/tiinductionsparkgit/yarn/target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar ...
+[info] Packaging ~/dev/bi/tiinductionsparkgit/target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar ...
 [info] Done packaging.
 [success] Total time: 131 s, completed Jan 11, 2016 3:43:49 PM
 ```
@@ -775,57 +803,80 @@ $ dot -Tpng target/dependencies-compile.dot > deptree/deptree.png # dot comes wi
 $ eog deptree/deptree.png & # eog is the command-line for the Gnome Image Viewer
 ```
 
+* As an alternative, create a light JAR:
+```bash
+$ sbt clean package
+```
+
 * Copy the JAR artifact to HDFS
 ```bash
-$ hadoop fs -mkdir -p /applications/induction/yarn
-$ hadoop fs -put target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar /applications/induction/yarn
-$ hadoop fs -ls /applications/induction/yarn
--rw-r--r--   1 build supergroup 182256661 2016-01-11 22:22 /applications/induction/yarn/induction-spark-yarn-assembly-0.1.0.jar
+$ hdfsfs -put target/scala-2.10/induction-spark-yarn_2.10-0.1.0.jar /artefacts/users/<username>
+$ hdfsfs -ls /artefacts/users/<username>
+-rw-r--r--   1 <username> supergroup 182256661 2017-03-11 22:22 /artefacts/users/<username>/induction-spark-yarn_2.10-0.1.0.jar
 ```
 
 * As root, alter the Spark setup, so as to tell where the executor is.
 And check that the setup is correct by running Spark as yarn-client:
 ```bash
 $ su -
-$ cat >> /opt/spark/spark-1.6.0-bin-without-hadoop/conf/spark-env.sh << _EOF
+$ cat >> $SPARK_HOME/conf/spark-env.sh << _EOF
 
 # See the yarn project of http://github.com/travel-intelligence/induction-spark
-SPARK_EXECUTOR_URI=hdfs://localhost:28020/applications/induction/yarn/induction-spark-yarn-assembly-0.1.0.jar
+SPARK_EXECUTOR_URI=$HDFS_URL/artefacts/users/<username>/induction-spark-yarn-2.10-0.1.0.jar
 
 _EOF
 ```
 
 * Check that the Spark setup works. As the standard Unix developer, launch
-the Spark Shell. A scala> prompt should appear.
+the Spark Shell. A ```scala>``` prompt should appear.
 ```bash
-$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-shell --master yarn --deploy-mode client
+$ $SPARK_HOME/bin/spark-shell --master yarn --deploy-mode client
 ```
 
-##### Run the Project in yarn-client mode
+##### Run the application in YARN client mode
 The driver program stays on the client JVM side.
 ```bash
-$ cd ~/dev/bi/tiinductionsparkgit/yarn
-$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
+$ cd ~/dev/bi/tiinductionsparkgit
+$ export MVN_CHD_REPO=~/.coursier/cache/v1/https/repo1.maven.org/maven2
+$ $SPARK_HOME/bin/spark-submit \
  --class com.amadeus.ti.induction.Introduction \
  --master yarn --deploy-mode client \
- --driver-memory 1g \
- --executor-memory 1g \
- --executor-cores 2 \
- target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
+ --queue default \
+ --jars file:$MVN_CHD_REPO/com/databricks/spark-csv_2.10/1.5.0/spark-csv_2.10-1.5.0.jar,\
+        file:$MVN_CHD_REPO/org/apache/commons/commons-csv/1.1/commons-csv-1.1.jar \
+ target/scala-2.10/induction-spark-yarn_2.10-0.1.0.jar
 ```
 
-##### Run the Project in yarn-client mode
+##### Run the application in YARN cluster mode
 The driver program runs on the Application master. The logs may be seen on
 the Web UI, with a URL like http://localhost:8088/cluster/app/application_NNNNNNNN_NNNN
+
+But, first, all the JARs, i.e., dependency JARs and the application JAR itself,
+must be pushed onto the HDFS cluster:
+* Push the application JAR onto HDFS:
 ```bash
-$ cd ~/dev/bi/tiinductionsparkgit/yarn
-$ /opt/spark/spark-1.6.0-bin-without-hadoop/bin/spark-submit \
+$ export ATF_USR_DIR=/artefacts/users/<username>
+$ export ATF_USR_URL=$HDFS_URL$ATF_USR_DIR
+$ hdfsfs -put -f target/scala-2.10/induction-spark-yarn_2.10-0.1.0.jar $ATF_USR_DIR
+```
+* Push the dependency JARs onto HDFS:
+```bash
+$ export ATF_MVN_DIR=/artefacts/common
+$ export ATF_MVN_URL=$HDFS_URL$ATF_MVN_DIR
+$ hdfsfs -put -f $MVN_CHD_REPO/com/databricks/spark-csv_2.10/1.5.0/spark-csv_2.10-1.5.0.jar \
+   $MVN_CHD_REPO/org/apache/commons/commons-csv/1.1/commons-csv-1.1.jar \
+   $ATF_MVN_DIR
+```
+
+* Then, the Spark job may be launched:
+```bash
+$ cd ~/dev/bi/tiinductionsparkgit
+$ $SPARK_HOME/bin/spark-submit \
  --class com.amadeus.ti.induction.Introduction \
  --master yarn --deploy-mode cluster \
- --driver-memory 1g \
- --executor-memory 1g \
- --executor-cores 2 \
- target/scala-2.10/induction-spark-yarn-assembly-0.1.0.jar
+ --queue default \
+ --jars $ATF_MVN_URL/spark-csv_2.10-1.5.0.jar,$ATF_MVN_URL/commons-csv-1.1.jar \
+ $ATF_USR_URL/induction-spark-yarn_2.10-0.1.0.jar
 ```
 
 ###### Administer the YARN cluster
@@ -843,4 +894,5 @@ $ yarn logs -applicationId application_NNNNNNNNNNNN_NNNN
 ```bash
 $ yarn application -kill application_NNNNNNNNNNNN_NNNN
 ```
+
 
