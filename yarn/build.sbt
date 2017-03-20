@@ -36,7 +36,7 @@ val libavroparquet = "com.twitter" % "parquet-avro" % "1.6.0"
 val libavrochill = "com.twitter" %% "chill-avro" % "0.9.2"
 
 // Spark
-val sparkVersion="1.6.3"
+val sparkVersion="1.6.2"
 val libsparkcore = "org.apache.spark" %% "spark-core" % sparkVersion
 val libsparksql = "org.apache.spark" %% "spark-sql" % sparkVersion
 val libsparkmllib = "org.apache.spark" %% "spark-mllib" % sparkVersion
@@ -47,7 +47,7 @@ val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java"
 lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
-	scalaVersion := "2.10.6",
+	scalaVersion := "2.10.5",
 	sbtVersion := "0.13.13"
 )
 
@@ -121,9 +121,6 @@ Seq (sbtavro.SbtAvro.avroSettings: _*)
 (stringType in avroConfig) := "String"
 
 javaSource in sbtavro.SbtAvro.avroConfig := (sourceDirectory in Compile).value / "java"
-
-// Artifacts
-publishTo := Some ("Local Maven Repo" at "http://localhost/artifacts/mavenrepo/")
 
 testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitxml")
 
