@@ -11,9 +11,9 @@ object Introduction extends App {
   
   // Configure a local Spark 'cluster' with two cores
   val sparkConf = new org.apache.spark.SparkConf()
-    .setAppName ("csvDataFrame")
-    .setMaster ("local[2]")
-  
+    .setAppName ("Spark-Induction")
+  //  .setMaster ("local[2]")
+
   // Initialize Spark context with the Spark configuration
   val sparkContext = new org.apache.spark.SparkContext (sparkConf)
   
@@ -23,8 +23,13 @@ object Introduction extends App {
   // //////////// First way: without case classes //////////////
   println ("//////////// First way: without case classes //////////////")
 
-  // Fill a (org.apache.spark.sql.)DataFrame with the content of the CSV file
-  val studentsDF = sqlContext.csvFile (filePath = "data/StudentData.csv",
+  // CSV data file, from the local file-system
+  // val dataFilepath = "data/StudentData.csv"
+  // CSV data file, from HDFS
+  // (check the fs.default.name property in the /etc/hadoop/core-site.xml file)
+  val dataFilepath= "hdfs://localhost:28020/data/induction/yarn/data/StudentData.csv"
+
+  val studentsDF = sqlContext.csvFile (filePath = dataFilepath,
     useHeader = true, delimiter = '|')
   
   // Print the schema of this input
