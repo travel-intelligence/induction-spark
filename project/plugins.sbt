@@ -12,3 +12,4 @@ resolvers += Classpaths.sbtPluginReleases
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.3")
 
+addSbtPlugin("com.cavorite" % "sbt-avro" % "0.3.2")
