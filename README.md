@@ -154,8 +154,8 @@ $ . ~/.bashrc
 * Use an external cluster HDFS:
 ```bash
 $ echo "# HDFS cluster" >> ~/.bashrc
-$ echo "alias hdfsfs='hdfs dfs -Dfs.defaultFS=hdfs://172.30.1.129:8020'" >> ~/.bashrc
-$ echo "export HDFS_URL=hdfs://172.30.1.129:8020" >> ~/.bashrc
+$ echo "alias hdfsfs='hdfs dfs -Dfs.defaultFS=hdfs://172.31.2.5:28020'" >> ~/.bashrc
+$ echo "export HDFS_URL=hdfs://172.31.2.5:28020" >> ~/.bashrc
 $ . ~/.bashrc
 ```
 

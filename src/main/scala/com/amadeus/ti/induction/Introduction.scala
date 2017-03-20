@@ -27,7 +27,7 @@ object Introduction extends App {
   // val dataFilepath = "data/StudentData.csv"
   // CSV data file, from HDFS
   // (check the fs.defaultFS property in the $HADOOP_CONF_DIR/core-site.xml file)
-  val dataFilepath= "hdfs://172.30.1.129:8020/user/darnaud/data/induction/yarn/data/StudentData.csv"
+  val dataFilepath= "hdfs://localhost:28020/data/induction/yarn/data/StudentData.csv"
 
   val studentsDF = sqlContext.csvFile (filePath = dataFilepath,
     useHeader = true, delimiter = '|')
