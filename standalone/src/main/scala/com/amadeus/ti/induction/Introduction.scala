@@ -11,7 +11,7 @@ object Introduction extends App {
   
   // Configure a local Spark 'cluster' with two cores
   val sparkConf = new org.apache.spark.SparkConf()
-    .setAppName ("Spark-Induction")
+    .setAppName ("csvDataFrame")
     .setMaster ("local[2]")
   
   // Initialize Spark context with the Spark configuration
