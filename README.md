@@ -1,12 +1,20 @@
 # Induction for Spark
 
 ## Setup
-### On Fedora
-#### For the Hadoop clients
+### For the Hadoop clients
+#### On Fedora
 ```bash
 $ dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs hadoop-hdfs-fuse parquet-format hadoop-maven-plugin
 ```
-#### To run a stand-alone Hadoop cluster
+
+#### Target the remote cluster
+The following four files need to be set up:
+
+##### Hortonworks (HDP) clusters
+Download the configuration files from [Ambari](https://docs.hortonworks.com/HDPDocuments/Ambari-2.1.2.0/bk_Ambari_Users_Guide/content/_downloading_client_configs.html).
+
+### Run a stand-alone Hadoop cluster
+#### On Fedora
 ```bash
 $ dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
 ```
