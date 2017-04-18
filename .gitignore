@@ -3,3 +3,5 @@ target/
 ModifiedStudent.csv/
 deptree.???
 project/build.properties
+/derby.log
+/metastore_db/
