@@ -36,19 +36,19 @@ val libavroparquet = "com.twitter" % "parquet-avro" % "1.6.0"
 val libavrochill = "com.twitter" %% "chill-avro" % "0.9.2"
 
 // Spark
-val sparkVersion="1.6.2"
+val sparkVersion="1.6.3"
 val libsparkcore = "org.apache.spark" %% "spark-core" % sparkVersion
 val libsparksql = "org.apache.spark" %% "spark-sql" % sparkVersion
 val libsparkmllib = "org.apache.spark" %% "spark-mllib" % sparkVersion
 val libsparkcsv = "com.databricks" %% "spark-csv" % "1.5.0"
 val libsparkhive = "org.apache.spark" %% "spark-hive" % sparkVersion
-val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector-java" % "1.6.0-M1"
+val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector" % "1.6.6"
 
 lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.1.0",
-	scalaVersion := "2.10.5",
-	sbtVersion := "0.13.13"
+	scalaVersion := "2.10.6",
+	sbtVersion := "0.13.15"
 )
 
 lazy val libSettings = Seq (
