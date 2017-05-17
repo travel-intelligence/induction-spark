@@ -457,6 +457,20 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 9 s, completed Jan 3, 2016 5:25:13 PM
 ```
 
+#### Trouble shooting
+If the outcome is not the same as shown just above, then re-run the program without filtering for errors:
+```bash
+$ sbt run 2>&1
+```
+
+##### Failure to bind on port 0
+If the error appears similar to ``spark Service 'sparkDriver' could not bind on port 0``,
+you may fix it by specifying that Spark is running locally:
+```bash
+$ export SPARK_LOCAL_IP=127.0.0.1
+$ sbt run 2>&1 | grep -v "error"
+```
+
 ### Further Creations of DataFrame Structures With Embedded Spark
 
 #### Setup of the Project
