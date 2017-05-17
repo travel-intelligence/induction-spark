@@ -767,7 +767,7 @@ $ sbt run 2>&1 | grep -v "error"
   * http://spark.apache.org/docs/latest/running-on-yarn.html
 
 * Download Apache Spark. From http://spark.apache.org/downloads.html, select:
-  * Spark release: 1.6.0
+  * Spark release: 1.6.3
   * Package type: pre-build with user-provided Hadoop
   * Download type: Select Apache mirror
   * As root, expand the tar-ball, for instance in /opt/spark
@@ -775,10 +775,11 @@ $ sbt run 2>&1 | grep -v "error"
 $ su -
 $ mkdir -p /opt/spark
 $ cd /opt/spark
-$ wget http://d3kbcqa49mib13.cloudfront.net/spark-1.6.0-bin-without-hadoop.tgz
-$ tar zxf spark-1.6.0-bin-without-hadoop.tgz
+$ SPARK_VERSION=1.6.3
+$ wget http://d3kbcqa49mib13.cloudfront.net/spark-$SPARK_VERSION-bin-without-hadoop.tgz
+$ tar zxf spark-$SPARK_VERSION-bin-without-hadoop.tgz
 $ echo "# Spark" >> ~/.bashrc
-$ echo "export SPARK_HOME=/opt/spark/spark-1.6.0-bin-without-hadoop" >> ~/.bashrc
+$ echo "export SPARK_HOME=/opt/spark/spark-$SPARK_VERSION-bin-without-hadoop" >> ~/.bashrc
 $ . ~/.bashrc
 ```
 
