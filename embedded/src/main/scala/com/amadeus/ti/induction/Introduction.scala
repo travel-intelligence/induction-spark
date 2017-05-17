@@ -47,7 +47,7 @@ object Introduction extends App {
   // val dataFilepath = "data/profiles.json"
   // JSON data file, from HDFS
   // (check the fs.default.name property in the /etc/hadoop/core-site.xml file)
-  val dataFilepath= "hdfs://localhost:28020/data/induction/embedded/profiles.json"
+  val dataFilepath= "hdfs://172.30.1.129:8020/data/induction/embedded/profiles.json"
   val dFrame : org.apache.spark.sql.DataFrame =
     sqlContext.read.json (dataFilepath)
 
