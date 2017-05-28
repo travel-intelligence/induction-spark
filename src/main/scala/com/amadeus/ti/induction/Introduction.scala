@@ -1,7 +1,7 @@
 package com.amadeus.ti.induction
 
 //import scala.reflect.runtime.universe
-import com.databricks.spark.csv._
+//import com.databricks.spark.csv._
 import scala.collection.JavaConverters._
 
 // Employee
@@ -9,16 +9,24 @@ case class Employee (id:Int, name:String)
 
 object Introduction extends App {
   
-  // Configure a local Spark 'cluster' with two cores
-  val sparkConf = new org.apache.spark.SparkConf()
-    .setAppName ("Spark-Induction")
-    .setMaster ("local[*]")
+  // Spark 2.x way, with a SparkSession
+  // https://databricks.com/blog/2016/08/15/how-to-use-sparksession-in-apache-spark-2-0.html
+  val spark = org.apache.spark.sql.SparkSession
+    .builder()
+    .appName("SparkSessionForInduction")
+	.config("spark.master", "local")
+    .enableHiveSupport()
+    .getOrCreate()
 
+  // Spark 1.x way, with SparkConf, SparkContext and SQLContext
+  // Configure a local Spark 'cluster' with two cores
+  //val sparkConf = new org.apache.spark.SparkConf()
+  //  .setAppName ("Spark-Induction")
+  //  .setMaster ("local[*]")
   // Initialize Spark context with the Spark configuration
-  val sparkContext = new org.apache.spark.SparkContext (sparkConf)
-  
+  //val sparkContext = new org.apache.spark.SparkContext (sparkConf)
   // Query Spark thanks to the SQL language
-  val sqlContext = new org.apache.spark.sql.SQLContext (sparkContext)
+  //val sqlContext = new org.apache.spark.sql.SQLContext (sparkContext)
   
   // //////////// First way: without case classes //////////////
   println ("//////////// First way: without case classes //////////////")
@@ -27,14 +35,24 @@ object Introduction extends App {
   // val dataFilepath = "data/StudentData.csv"
   // CSV data file, from HDFS
   // (check the fs.defaultFS property in the $HADOOP_CONF_DIR/core-site.xml file)
-  val dataFilepath= "hdfs://localhost:28020/data/induction/yarn/data/StudentData.csv"
+  // val dataFilepath = "hdfs://localhost:8020/data/induction/yarn/data/StudentData.csv"
+  val dataFilepath = "data/StudentData.csv"
 
-  val studentsDF = sqlContext.csvFile (filePath = dataFilepath,
-    useHeader = true, delimiter = '|')
+  // Spark 1.x: val df = sqlContext.read
+  //val studentsDF = sqlContext.csvFile (filePath = dataFilepath,
+  //                                     useHeader = true, delimiter = '|')
+  // Spark 2x
+  val studentsDF = spark.read
+    .format("com.databricks.spark.csv")
+    .option("header", "true")       // Use first line of all files as header
+    .option("inferSchema", "true")  // Automatically infer data types
+    .option("delimiter", "^")
+    .option("timestampFormat", "yyyy-MM-dd HH:mm:ss")
+    .load(dataFilepath)
   
   // Print the schema of this input
   println ("studentsDF:")
-  studentsDF.printSchema
+  studentsDF.printSchema()
   
   // Sample 3 records along with headers
   studentsDF.show (3)
@@ -70,16 +88,19 @@ object Introduction extends App {
   // Get all students, for which names start with the letter 'M'
   studentsDF.filter ("SUBSTR(studentName,0,1) ='M'").show(7)
   
-  // The real power of DataFrames lies in the way we could treat it like a relational table and use SQL to query
-  // Step 1. Register the students DataFrame as a table with name "students" (or any name)
-  studentsDF.registerTempTable ("students")
+  // The real power of DataFrames lies in the way we could treat it
+  // like a relational table and use SQL to query
+  // Step 1. Register the students DataFrame as a table
+  // with name "students" (or any name)
+  studentsDF.createOrReplaceTempView ("students")
   
   // Step 2. Query it away
-  val dfFilteredBySQL = sqlContext.sql ("select * from students where studentName != '' order by email desc")
+  val dfFilteredBySQL = spark.sql ("select * from students where studentName != '' order by email desc")
   println ("dfFilteredBySQL:")
   dfFilteredBySQL.show(7)
   
-  // You could also optionally order the DataFrame by column without registering it as a table.
+  // You could also optionally order the DataFrame by column
+  // without registering it as a table.
   // Order by descending order
   studentsDF.sort (studentsDF ("studentName").desc).show(10)
   
@@ -89,17 +110,25 @@ object Introduction extends App {
   // Now, let's save the modified DataFrame with a new name
   val options = Map ("header" -> "true", "path" -> "ModifiedStudent.csv")
   
-  // Modify DataFrame - pick 'studentName' and 'email' columns, change 'studentName' column name to just 'name' 
-  val copyOfStudentsDF = studentsDF.select (studentsDF ("studentName").as("name"), studentsDF ("email"))
+  // Modify DataFrame - pick 'studentName' and 'email' columns,
+  // change 'studentName' column name to just 'name'
+  val copyOfStudentsDF = studentsDF
+    .select (studentsDF ("studentName").as("name"), studentsDF ("email"))
   println ("copyOfStudentsDF:")
   copyOfStudentsDF.show()
 
-  // Save this new dataframe with headers and with file name "ModifiedStudent.csv"
-  copyOfStudentsDF.write.format ("com.databricks.spark.csv").mode (org.apache.spark.sql.SaveMode.Overwrite).options(options).save
+  // Save this new dataframe with headers
+  // and with file name "ModifiedStudent.csv"
+  copyOfStudentsDF.write
+    .format ("com.databricks.spark.csv")
+    .mode (org.apache.spark.sql.SaveMode.Overwrite)
+    .options(options).save
   
   // Load the saved data and verify the schema and list some records
   // Instead of using the csvFile, you could do a 'load' 
-  val newStudentsDF = sqlContext.read.format("com.databricks.spark.csv").options(options).load
+  val newStudentsDF = spark.read
+    .format ("com.databricks.spark.csv")
+    .options (options).load
   println ("newStudentsDF:")
   newStudentsDF.printSchema()
   newStudentsDF.show()
@@ -108,30 +137,36 @@ object Introduction extends App {
   println ("//////////// Second way: with case classes //////////////")
 
   // Create a container, aimed at receiving the data to be read from the CSV file
-  val listOfEmployees = List (Employee (1,"Arun"), Employee (2, "Jason"), Employee (3, "Abhi"))
+  val listOfEmployees = List (
+    Employee (1,"Arun"),
+    Employee (2, "Jason"),
+    Employee (3, "Abhi"))
   
   // Read the CSV file and fill the corresponding DataFrame
-  val empFrame = sqlContext.createDataFrame (listOfEmployees)
+  val empFrame = spark.createDataFrame (listOfEmployees)
   
   println ("empFrame:")
   empFrame.printSchema
   empFrame.show(3)
   
   // The withColumnRenamed() function allows to control the names of the columns
-  val empFrameWithRenamedColumns = sqlContext.createDataFrame (listOfEmployees).withColumnRenamed ("id", "empId")
+  val empFrameWithRenamedColumns = spark.createDataFrame (listOfEmployees)
+    .withColumnRenamed ("id", "empId")
   
   println ("empFrameWithRenamedColumns:")
   empFrameWithRenamedColumns.printSchema
 
-  // Watch out for the columns with a "." in them. This is an open bug and needs to be fixed as of 1.3.0
-  empFrameWithRenamedColumns.registerTempTable ("employeeTable")
+  // Watch out for the columns with a "." in them.
+  // This is an open bug and needs to be fixed as of 1.3.0
+  empFrameWithRenamedColumns.createOrReplaceTempView ("employeeTable")
   
-  val sortedByNameEmployees = sqlContext.sql ("select * from employeeTable order by name desc")
+  val sortedByNameEmployees = spark.sql ("select * from employeeTable order by name desc")
   
   sortedByNameEmployees.show()
   
-  // Create dataframe from Tuple. Of course, you could rename the column using the withColumnRenamed
-  val empFrame1 = sqlContext.createDataFrame (Seq ((1,"Android"), (2, "iPhone")))
+  // Create dataframe from Tuple. Of course,
+  // you could rename the column using the withColumnRenamed
+  val empFrame1 = spark.createDataFrame (Seq ((1,"Android"), (2, "iPhone")))
   empFrame1.printSchema
   empFrame1.show()
 }
