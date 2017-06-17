@@ -1,0 +1,7 @@
+target/
+*~
+ModifiedStudent.csv/
+deptree.???
+build.properties
+/derby.log
+/metastore_db/
