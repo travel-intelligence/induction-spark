@@ -821,6 +821,7 @@ $ sbt clean assembly
 they should be excluded from the dependencies.
 ```bash
 $ sbt dependency-tree > deptree.txt
+$ sbt test:dependency-tree > deptree-test.txt
 $ sbt dependency-dot
 $ dot -Tpng target/dependencies-compile.dot > deptree/deptree.png # dot comes with the graphviz package
 $ eog deptree/deptree.png & # eog is the command-line for the Gnome Image Viewer
