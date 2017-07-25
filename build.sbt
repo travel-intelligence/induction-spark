@@ -1,13 +1,4 @@
 
-// import AssemblyKeys._
-
-assemblyOption in assembly :=
-  (assemblyOption in assembly).value.copy (includeScala = false)
-
-// assemblySettings
-
-// test in assembly := {}
-
 // See https://mvnrepository.com
 
 // //// Java libraries
@@ -68,12 +59,15 @@ lazy val libSettings = Seq (
   libraryDependencies += libavrochill
 )
 
-lazy val root = (project in file(".")).
-	settings(commonSettings: _*).
-	settings(libSettings: _*).
-	settings(
-		name := "induction-spark-yarn"
-	)
+lazy val displayVersion = taskKey[Unit]("Display the version of the project")
+
+lazy val root = (project in file("."))
+  .settings(commonSettings: _*)
+  .settings(libSettings: _*)
+  .settings(
+    name := "induction-spark-yarn",
+    displayVersion := { println (version.value.toString)}
+  )
 
 checksums in update := Nil
 
@@ -98,18 +92,6 @@ resolvers ++= Seq (
   "Twitter" at "http://maven.twttr.com/",
   Resolver.mavenLocal
 )
-
-// Merge strategy
-assemblyMergeStrategy in assembly := {
-    case "application.conf"                            =>
-  MergeStrategy.concat
-    case PathList("org", "cyberneko", "html", xs @ _*) =>
-  MergeStrategy.first
-    case m if m.toLowerCase.endsWith("manifest.mf")    =>
-  MergeStrategy.discard
-    case f                                             =>
-  (assemblyMergeStrategy in assembly).value(f)
-}
 
 //
 fork := true
