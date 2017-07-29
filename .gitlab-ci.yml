@@ -9,15 +9,15 @@ image: library/centos:7
 
 before_script:
   # Update the system
-  - sudo rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7
-  - sudo yum -y update
-  - sudo yum -y install epel-release
+  - sudo -S rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7
+  - sudo -S yum -y update
+  - sudo -S yum -y install epel-release
   # Install Java
-  - sudo yum -y install curl java-1.8.0-openjdk-devel
+  - sudo -S yum -y install curl java-1.8.0-openjdk-devel
   # Install SBT
-  - curl -sS https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
-  - sudo rpm --import "http://dl.bintray.com/sbt/rpm/repodata/repomd.xml.key"
-  - sudo yum -y install sbt
+  - curl -sS https://bintray.com/sbt/rpm/rpm | sudo -S tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+  - sudo -S rpm --import "http://dl.bintray.com/sbt/rpm/repodata/repomd.xml.key"
+  - sudo -S yum -y install sbt
   # Log the sbt version
   - sbt sbt-version
 
