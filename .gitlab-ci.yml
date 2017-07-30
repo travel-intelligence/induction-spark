@@ -1,29 +1,32 @@
-# https://docs.gitlab.com/runner/executors/docker.html
+# Source: https://docs.gitlab.com/ee/ci/examples/test-scala-application.html
 # This file is a template, and might need editing before it works on your project.
 # Official images to be found on https://hub.docker.com/u/library/?page=2
 # For instance:
 # - https://hub.docker.com/_/java/ - Official Java image
 # - https://hub.docker.com/_/centos/ - Official CentOS image
-image: library/centos:7
-#image: java:7
+#image: library/centos:7
+image: java:8
+
+stages:
+  - test
+  - publish
 
 before_script:
-  # Update the system
-  - rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7
-  - yum -y update
-  - yum -y install epel-release
-  # Install Java
-  - yum -y install curl wget java-1.8.0-openjdk-devel
-  # Install SBT
-  - wget https://bintray.com/sbt/rpm/rpm -O /etc/yum.repos.d/bintray-sbt-rpm.repo
-  - rpm --import "http://dl.bintray.com/sbt/rpm/repodata/repomd.xml.key"
-  - yum -y install sbt
-  # Log the sbt version
+  - apt-get update -y
+  - apt-get install apt-transport-https -y
+  ## Install SBT
+  - echo "deb http://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
+  - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
+  - apt-get update -y
+  - apt-get install sbt -y
   - sbt sbt-version
 
 test:
+  stage: test
   script:
-    # Execute the test
-    #- sbt clean test
-    - sbt compile
+    - sbt clean compile test
 
+publish:
+  stage: publish
+  script:
+    - sbt clean compile package publish-m2 publish-local
