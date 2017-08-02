@@ -46,7 +46,7 @@ object Introduction extends App {
     .format("com.databricks.spark.csv")
     .option("header", "true")       // Use first line of all files as header
     .option("inferSchema", "true")  // Automatically infer data types
-    .option("delimiter", "^")
+    .option("delimiter", "|")
     .option("timestampFormat", "yyyy-MM-dd HH:mm:ss")
     .load(dataFilepath)
   
