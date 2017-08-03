@@ -3,31 +3,46 @@
 
 // //// Java libraries
 // Date-Time
-val libjoda = "joda-time" % "joda-time" % "2.9.7"
+//val libjoda = "joda-time" % "joda-time" % "2.9.7"
+val libnscala = "com.github.nscala-time" %% "nscala-time" % "2.16.0"
 
 // JSON
 // Note: version 3.2.11 not compatible with Spark 1.4+
 //val libjson4score = "org.json4s" %% "json4s-core" % "3.2.10"
-val libjson4sjackson = "org.json4s" %% "json4s-jackson" % "3.2.10"
+val libjson4sjackson = "org.json4s" %% "json4s-jackson" % "3.2.11"
 
 // MySQL
-val libmysql = "mysql" % "mysql-connector-java" % "6.0.5"
+val libmysql = "mysql" % "mysql-connector-java" % "6.0.6"
 
 // //// Scala libraries
 // Test
-val libspecs2 = "org.specs2" %% "specs2" % "3.3.1" % "test"
+val libspecs2 = "org.specs2" %% "specs2-core" % "3.9.4" % "test"
 
 // Breeze (linear algebra and numerical algorithms)
-val libbreeze = "org.scalanlp" %% "breeze" % "0.13"
-val libbreezenative = "org.scalanlp" %% "breeze-natives" % "0.13"
+val libbreeze = "org.scalanlp" %% "breeze" % "0.13.2"
+val libbreezenative = "org.scalanlp" %% "breeze-natives" % "0.13.2"
 
 // Apache Avro
-val libavro = "org.apache.avro" % "avro" % "1.8.1"
-val libavroparquet = "com.twitter" % "parquet-avro" % "1.6.0"
-val libavrochill = "com.twitter" %% "chill-avro" % "0.9.2"
+val libavro = "org.apache.avro" % "avro" % "1.8.2"
+val libavroparquet = "org.apache.parquet" % "parquet-avro" % "1.9.0"
+val libavrochill = "com.twitter" %% "chill-avro" % "0.8.0"
+
+// Jets3t
+val libjets3t = "net.java.dev.jets3t" % "jets3t" % "0.9.3"
+
+// Google Guava
+val libguava = "com.google.guava" % "guava" % "22.0"
+
+// Netty
+val libnetty = "io.netty" % "netty-all" % "4.1.13.Final"
+
+// Hadoop
+val libhadoopcommon = "org.apache.hadoop" % "hadoop-common" % "2.7.3"
+val libhadoophdfs = "org.apache.hadoop" % "hadoop-hdfs" % "2.7.3"
+val libhadoopyarn = "org.apache.hadoop" % "hadoop-yarn-client" % "2.7.3"
 
 // Spark
-val sparkVersion="2.1.1"
+val sparkVersion="2.2.0"
 val libsparkcore = "org.apache.spark" %% "spark-core" % sparkVersion
 val libsparksql = "org.apache.spark" %% "spark-sql" % sparkVersion
 val libsparkmllib = "org.apache.spark" %% "spark-mllib" % sparkVersion
@@ -38,15 +53,20 @@ val libsparkcassandra = "com.datastax.spark" %% "spark-cassandra-connector" % "2
 lazy val commonSettings = Seq (
 	organization := "com.amadeus.ti",
 	version := "0.2.0",
-	scalaVersion := "2.11.11",
-	sbtVersion := "0.13.15"
+	scalaVersion := "2.11.8"
 )
 
 lazy val libSettings = Seq (
-  libraryDependencies += libjoda,
+  libraryDependencies += libnscala,
   libraryDependencies += libspecs2,
   libraryDependencies += libbreeze,
   libraryDependencies += libbreezenative,
+  libraryDependencies += libjets3t,
+  libraryDependencies += libguava,
+  libraryDependencies += libnetty,
+  libraryDependencies += libhadoopcommon,
+  libraryDependencies += libhadoophdfs,
+  libraryDependencies += libhadoopyarn,
   libraryDependencies += libsparkcore,
   libraryDependencies += libsparksql,
   libraryDependencies += libsparkmllib,
