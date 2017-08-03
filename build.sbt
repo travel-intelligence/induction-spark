@@ -27,14 +27,17 @@ val libavro = "org.apache.avro" % "avro" % "1.8.2"
 val libavroparquet = "org.apache.parquet" % "parquet-avro" % "1.9.0"
 val libavrochill = "com.twitter" %% "chill-avro" % "0.8.0"
 
+// Commons Net
+val libcommonsnet = "commons-net" % "commons-net" % "2.2"
+
 // Jets3t
 val libjets3t = "net.java.dev.jets3t" % "jets3t" % "0.9.3"
 
 // Google Guava
-val libguava = "com.google.guava" % "guava" % "22.0"
+val libguava = "com.google.guava" % "guava" % "16.0.1"
 
 // Netty
-val libnetty = "io.netty" % "netty-all" % "4.1.13.Final"
+val libnetty = "io.netty" % "netty-all" % "4.0.23.Final"
 
 // Hadoop
 val libhadoopcommon = "org.apache.hadoop" % "hadoop-common" % "2.7.3"
@@ -61,6 +64,7 @@ lazy val libSettings = Seq (
   libraryDependencies += libspecs2,
   libraryDependencies += libbreeze,
   libraryDependencies += libbreezenative,
+  libraryDependencies += libcommonsnet,
   libraryDependencies += libjets3t,
   libraryDependencies += libguava,
   libraryDependencies += libnetty,
@@ -124,7 +128,4 @@ Seq (sbtavro.SbtAvro.avroSettings: _*)
 javaSource in sbtavro.SbtAvro.avroConfig := (sourceDirectory in Compile).value / "java"
 
 testOptions in Test += Tests.Argument (TestFrameworks.Specs2, "console", "junitxml")
-
-packageArchetype.java_application
-
 
