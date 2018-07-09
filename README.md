@@ -1,24 +1,25 @@
-# Induction for Spark
+# References
+* http://towardsdatascience.com/multi-class-text-classification-with-pyspark-7d78d022ed35
 
-## Setup
-### For the Hadoop clients
-#### On Fedora
+# Setup
+## For the Hadoop clients
+### On Fedora
 ```bash
 $ dnf -y install hadoop-common-native hadoop-client parquet-format libhdfs hadoop-hdfs-fuse parquet-format hadoop-maven-plugin
 ```
 
-#### Target the remote cluster
+### Target the remote cluster
 The following four files need to be set up:
 
-##### Hortonworks (HDP) clusters
+#### Hortonworks (HDP) clusters
 Download the configuration files from [Ambari](https://docs.hortonworks.com/HDPDocuments/Ambari-2.1.2.0/bk_Ambari_Users_Guide/content/_downloading_client_configs.html).
 
-### Run a stand-alone Hadoop cluster
-#### On Fedora
+## Run a stand-alone Hadoop cluster
+### On Fedora
 ```bash
 $ dnf -y install hadoop-mapreduce hadoop-yarn hadoop-httpfs hive
 ```
-#### Setup HDFS (as root)
+### Setup HDFS (as root)
 See also http://fedoraproject.org/wiki/User:Denisarnaud/Hadoop
 
 * Install the Hadoop packages
@@ -148,7 +149,7 @@ $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -mkdir -p /artefacts/users/<
 $ runuser hdfs -s /bin/bash /bin/bash -c "hadoop fs -chown -R <username> /artefacts/users/<username>"
 ```
 
-### Interacting with the HDFS file-system
+## Interacting with the HDFS file-system
 As you may choose to use an external cluster, rather than setting up your own,
 in the remainder of that introduction, an alias and some environment variable
 will be used. A few examples are given; so, just pick one.
@@ -167,11 +168,11 @@ $ echo "export HDFS_URL=hdfs://172.31.2.5:28020" >> ~/.bashrc
 $ . ~/.bashrc
 ```
 
-## Projects
+# Projects
 
-### Basic Example with the JVM-Embedded Spark
+## Basic Example with the JVM-Embedded Spark
 
-#### Overview
+### Overview
 That example instanciates (Spark) DataFrames through RDD structures.
 Those latter may retrieve data from CSV files.
 Two ways are explored in that example:
@@ -183,7 +184,7 @@ fits in memory. So, it does not scale to big data cases.
 class (Student), and then adds the RDD to the DataFrame.
 
 
-#### Setup the Project
+### Setup the Project
 ```bash
 $ mkdir -p ~/dev/bi
 $ cd ~/dev/bi
@@ -196,7 +197,7 @@ $ sbt compile
 [success] Total time: 0 s, completed Dec 28, 2015 8:54:18 PM
 ```
 
-#### Run the project
+### Run the project
 ```bash
 $ sbt run 2>&1 | grep -v "error"
  [...]
@@ -457,13 +458,13 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 9 s, completed Jan 3, 2016 5:25:13 PM
 ```
 
-#### Trouble shooting
+### Trouble shooting
 If the outcome is not the same as shown just above, then re-run the program without filtering for errors:
 ```bash
 $ sbt run 2>&1
 ```
 
-##### Failure to bind on port 0
+#### Failure to bind on port 0
 If the error appears similar to ``spark Service 'sparkDriver' could not bind on port 0``,
 you may fix it by specifying that Spark is running locally:
 ```bash
@@ -471,9 +472,9 @@ $ export SPARK_LOCAL_IP=127.0.0.1
 $ sbt run 2>&1 | grep -v "error"
 ```
 
-### Further Creations of DataFrame Structures With Embedded Spark
+## Further Creations of DataFrame Structures With Embedded Spark
 
-#### Setup of the Project
+### Setup of the Project
 
 Some parts of the code use data files on HDFS.
 
@@ -484,7 +485,7 @@ $ hadoop fs -put data/profiles.json /data/induction/embedded
 $ hadoop fs -ls /data/induction/embedded
 -rw-r--r--   1 <username> supergroup     161820 2016-01-05 23:05 /data/induction/embedded/profiles.json
 ```
-#### Run the project
+### Run the project
 ```bash
 $ sbt run 2>&1 | grep -v "error"
  [...]
@@ -760,9 +761,9 @@ $ sbt run 2>&1 | grep -v "error"
 [success] Total time: 8 s, completed Jan 10, 2016 11:56:40 PM
 ```
 
-### Further Creations of DataFrame Structures With Stand-Alone YARN Cluster
+## Further Creations of DataFrame Structures With Stand-Alone YARN Cluster
 
-#### Setup of the Project
+### Setup of the Project
 * See also:
   * http://spark.apache.org/docs/latest/running-on-yarn.html
 
@@ -857,7 +858,7 @@ the Spark Shell. A ```scala>``` prompt should appear.
 $ $SPARK_HOME/bin/spark-shell --master yarn --deploy-mode client
 ```
 
-##### Run the application in YARN client mode
+#### Run the application in YARN client mode
 The driver program stays on the client JVM side.
 ```bash
 $ cd ~/dev/bi/tiinductionsparkgit
@@ -871,7 +872,7 @@ $ $SPARK_HOME/bin/spark-submit \
  target/scala-2.10/induction-spark-yarn_2.10-0.1.0.jar
 ```
 
-##### Run the application in YARN cluster mode
+#### Run the application in YARN cluster mode
 The driver program runs on the Application master. The logs may be seen on
 the Web UI, with a URL like http://localhost:8088/cluster/app/application_NNNNNNNN_NNNN
 
@@ -903,7 +904,7 @@ $ $SPARK_HOME/bin/spark-submit \
  $ATF_USR_URL/induction-spark-yarn_2.10-0.1.0.jar
 ```
 
-###### Administer the YARN cluster
+##### Administer the YARN cluster
 * List all the applications. Either on the Web UI (http://localhost:8088/cluster),
 or through the command line:
 ```bash
