@@ -1,5 +1,6 @@
 # References
 * http://towardsdatascience.com/multi-class-text-classification-with-pyspark-7d78d022ed35
+* http://www.datasciencecentral.com/profiles/blogs/practical-apache-spark-in-10-minutes-part-4-mllib
 
 # Setup
 ## For the Hadoop clients
